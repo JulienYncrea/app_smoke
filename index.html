@@ -316,7 +316,7 @@
     </div>
 
     <div class="container chart-container">
-        <h2>Tendances journalières</h2>
+        <h2>Tendances journalières (30 derniers jours)</h2>
         <canvas id="dailyChart"></canvas>
     </div>
 
@@ -602,8 +602,30 @@
             const sortedMonthlyLabels = Object.keys(monthlyData).sort();
             const sortedMonthlyCounts = sortedMonthlyLabels.map(label => monthlyData[label]);
 
+            // Limit daily chart to last 30 days
+            const limitDays = 30;
+            const recentDailyLabels = [];
+            const recentDailyCounts = [];
+            
+            // Generate labels for the last 'limitDays' days, even if no data
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const dailyChartLabels = [];
+            const dailyChartData = [];
+
+            for (let i = limitDays - 1; i >= 0; i--) {
+                const d = new Date(today);
+                d.setDate(today.getDate() - i);
+                const dateKey = d.toISOString().split('T')[0];
+                const displayDate = formatDate(dateKey).replace(` ${d.getFullYear()}`, ''); // Remove current year
+                
+                dailyChartLabels.push(displayDate);
+                dailyChartData.push(dailyData[dateKey] || 0); // Use 0 if no record for that day
+            }
+
+
             // Convert date strings to more readable format for charts
-            const readableDailyLabels = sortedDailyLabels.map(d => formatDate(d).replace(` ${new Date().getFullYear()}`, '')); // Remove current year if present
+            // const readableDailyLabels = sortedDailyLabels.map(d => formatDate(d).replace(` ${new Date().getFullYear()}`, '')); // Remove current year if present
             const readableWeeklyLabels = sortedWeeklyLabels.map(d => {
                 const startDate = new Date(d);
                 const endDate = new Date(startDate);
@@ -626,10 +648,10 @@
             dailyChartInstance = new Chart(dailyCtx, {
                 type: 'bar',
                 data: {
-                    labels: readableDailyLabels,
+                    labels: dailyChartLabels, // Use the new limited labels
                     datasets: [{
                         label: 'Cigarettes par jour',
-                        data: sortedDailyCounts,
+                        data: dailyChartData, // Use the new limited data
                         backgroundColor: 'rgba(76, 175, 80, 0.7)', // Green
                         borderColor: 'rgba(76, 175, 80, 1)',
                         borderWidth: 1
