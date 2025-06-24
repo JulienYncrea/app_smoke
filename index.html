@@ -171,19 +171,24 @@
             margin: 0;
         }
 
-        #dailyChart, #weeklyChart, #monthlyChart {
-            max-width: 100%;
-            height: 300px; /* Hauteur des graphiques */
-            background: #111827;
-            padding: 1rem;
-            border-radius: 0.5rem;
-            margin-top: 1rem;
-        }
         .chart-container {
             margin-top: 2rem;
+            max-height: 400px; /* New: Max height for chart containers */
+            overflow: hidden; /* New: Hide overflowing content */
         }
         .chart-container h2 {
             margin-bottom: 1rem;
+        }
+
+        /* Enforce canvas height and display */
+        #dailyChart, #weeklyChart, #monthlyChart {
+            max-width: 100%;
+            height: 300px; /* Fixed height for charts */
+            background: #111827;
+            padding: 1rem; /* Padding applied to canvas, not its container */
+            border-radius: 0.5rem;
+            display: block; /* New: Ensures canvas respects its dimensions */
+            margin: 0 auto; /* Center the canvas if it doesn't take full width */
         }
 
         /* Styles for increment/decrement buttons */
@@ -604,10 +609,7 @@
 
             // Limit daily chart to last 30 days
             const limitDays = 30;
-            const recentDailyLabels = [];
-            const recentDailyCounts = [];
-            
-            // Generate labels for the last 'limitDays' days, even if no data
+            // Generate labels and data for the last 'limitDays' days, even if no data
             const today = new Date();
             today.setHours(0, 0, 0, 0);
             const dailyChartLabels = [];
@@ -625,7 +627,6 @@
 
 
             // Convert date strings to more readable format for charts
-            // const readableDailyLabels = sortedDailyLabels.map(d => formatDate(d).replace(` ${new Date().getFullYear()}`, '')); // Remove current year if present
             const readableWeeklyLabels = sortedWeeklyLabels.map(d => {
                 const startDate = new Date(d);
                 const endDate = new Date(startDate);
@@ -667,7 +668,11 @@
                             grid: { color: '#4B5563' }
                         },
                         x: {
-                            ticks: { color: '#d1d5db' },
+                            ticks: { 
+                                color: '#d1d5db',
+                                maxTicksLimit: 10, // Limit visible ticks
+                                autoSkip: true // Enable auto-skipping of labels for better readability
+                            },
                             grid: { color: '#4B5563' }
                         }
                     },
