@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SmokeTrack 🚭</title>
+    <link rel="manifest" href="manifest.json" />
+    <link rel="apple-touch-icon" href="icon.png" />
+    <meta name="theme-color" content="#111827" />
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 1rem;
+            background: #1f2937;
+            color: #f9fafb;
+            line-height: 1.6;
+        }
+        h1, h2, h3 {
+            text-align: center;
+            color: #4CAF50; /* Vert pour la santé */
+            margin-bottom: 1rem;
+        }
+        #mainTitle {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+            color: #4CAF50;
+            cursor: pointer;
+            font-size: 2em;
+            margin-bottom: 2rem;
+        }
+        #mainTitle .logo {
+            font-size: 1.2em;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 1rem auto;
+            background: #374151;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+        label {
+            display: block;
+            margin-top: 0.8rem;
+            margin-bottom: 0.3rem;
+            font-weight: bold;
+            color: #E0E7FF;
+        }
+        input[type="date"],
+        input[type="number"],
+        button,
+        select {
+            width: 100%;
+            padding: 0.75rem;
+            margin-top: 0.2rem;
+            border: 1px solid #4B5563;
+            border-radius: 0.5rem;
+            box-sizing: border-box;
+            background: #4B5563;
+            color: #f9fafb;
+            font-size: 1rem;
+        }
+        input[type="number"] {
+            -moz-appearance: textfield; /* Firefox */
+        }
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        button {
+            margin-top: 1.5rem;
+            background: #4CAF50; /* Vert */
+            color: #ffffff;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            font-size: 1.1rem;
+            border: none;
+        }
+        button:hover {
+            background: #45a049;
+            transform: translateY(-1px);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+
+        .record-item {
+            background: #111827;
+            padding: 0.8rem 1.2rem;
+            margin-top: 0.7rem;
+            border-radius: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            border-left: 5px solid #4CAF50;
+        }
+        .record-item:hover {
+            background: #2563eb;
+        }
+        .record-item span {
+            font-size: 1rem;
+            color: #d1d5db;
+        }
+        .record-item .date {
+            font-weight: bold;
+            color: #FBBF24;
+            flex-basis: 30%;
+        }
+        .record-item .count {
+            font-weight: bold;
+            color: #E0E7FF;
+            flex-basis: 30%;
+            text-align: right;
+        }
+        .record-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-left: auto;
+        }
+        .btn-action {
+            background: #ef4444; /* Rouge pour supprimer */
+            border: none;
+            color: white;
+            font-size: 0.9rem;
+            cursor: pointer;
+            padding: 0.4rem 0.8rem;
+            border-radius: 0.3rem;
+            transition: background-color 0.3s ease;
+        }
+        .btn-action:hover {
+            background: #b91c1c;
+        }
+        .btn-edit {
+            background: #3b82f6; /* Bleu pour modifier */
+        }
+        .btn-edit:hover {
+            background: #1d4ed8;
+        }
+
+        .stats-section {
+            margin-top: 2rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+        .stat-card {
+            background: #111827;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            text-align: center;
+            border-bottom: 4px solid #4CAF50;
+        }
+        .stat-card h3 {
+            color: #FBBF24;
+            margin-top: 0;
+            margin-bottom: 0.5rem;
+            font-size: 1.2em;
+        }
+        .stat-card p {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #E0E7FF;
+            margin: 0;
+        }
+
+        #dailyChart, #weeklyChart, #monthlyChart {
+            max-width: 100%;
+            height: 300px; /* Hauteur des graphiques */
+            background: #111827;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-top: 1rem;
+        }
+        .chart-container {
+            margin-top: 2rem;
+        }
+        .chart-container h2 {
+            margin-bottom: 1rem;
+        }
+
+        @media (max-width: 640px) {
+            .container {
+                padding: 1rem;
+                margin: 0.5rem auto;
+            }
+            .record-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .record-item .date, .record-item .count {
+                flex-basis: 100%;
+                text-align: left;
+            }
+            .record-actions {
+                margin-left: 0;
+                width: 100%;
+                justify-content: flex-end;
+            }
+            .stats-section {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Service Worker Registration (for PWA functionality)
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('Service Worker enregistré:', reg.scope))
+                    .catch(err => console.error('Erreur SW:', err));
+            });
+        }
+    </script>
+</head>
+<body>
+    <h1 id="mainTitle">SmokeTrack <span class="logo">🚭</span></h1>
+
+    <div class="container">
+        <h2>Ajouter votre consommation</h2>
+        <form id="cigaretteForm">
+            <label for="recordDate">Date</label>
+            <input type="date" id="recordDate" required />
+
+            <label for="cigaretteCount">Nombre de cigarettes</label>
+            <input type="number" id="cigaretteCount" min="0" value="0" required />
+
+            <button type="submit" id="addUpdateBtn">Ajouter la consommation</button>
+        </form>
+    </div>
+
+    <div class="container">
+        <h2>Historique des consommations</h2>
+        <div id="recordList">
+            </div>
+    </div>
+
+    <div class="container stats-section">
+        <div class="stat-card">
+            <h3>Moyenne quotidienne (7j)</h3>
+            <p id="avgDailyLast7Days">0</p>
+        </div>
+        <div class="stat-card">
+            <h3>Total aujourd'hui</h3>
+            <p id="totalToday">0</p>
+        </div>
+        <div class="stat-card">
+            <h3>Total cette semaine</h3>
+            <p id="totalThisWeek">0</p>
+        </div>
+        <div class="stat-card">
+            <h3>Total ce mois</h3>
+            <p id="totalThisMonth">0</p>
+        </div>
+    </div>
+
+    <div class="container chart-container">
+        <h2>Tendances journalières</h2>
+        <canvas id="dailyChart"></canvas>
+    </div>
+
+    <div class="container chart-container">
+        <h2>Tendances hebdomadaires</h2>
+        <canvas id="weeklyChart"></canvas>
+    </div>
+
+    <div class="container chart-container">
+        <h2>Tendances mensuelles</h2>
+        <canvas id="monthlyChart"></canvas>
+    </div>
+
+    <script>
+        const cigaretteForm = document.getElementById('cigaretteForm');
+        const recordDateInput = document.getElementById('recordDate');
+        const cigaretteCountInput = document.getElementById('cigaretteCount');
+        const addUpdateBtn = document.getElementById('addUpdateBtn');
+        const recordList = document.getElementById('recordList');
+        const mainTitle = document.getElementById('mainTitle');
+
+        // Stats elements
+        const avgDailyLast7DaysElement = document.getElementById('avgDailyLast7Days');
+        const totalTodayElement = document.getElementById('totalToday');
+        const totalThisWeekElement = document.getElementById('totalThisWeek');
+        const totalThisMonthElement = document.getElementById('totalThisMonth');
+
+        let records = [];
+        let editingRecordId = null;
+
+        // Chart instances
+        let dailyChartInstance = null;
+        let weeklyChartInstance = null;
+        let monthlyChartInstance = null;
+
+        function generateUniqueId() {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+        }
+
+        function loadRecords() {
+            const storedRecords = JSON.parse(localStorage.getItem('smokeTrackRecords')) || [];
+            records = [];
+            let changed = false;
+
+            // Ensure all records have an ID
+            storedRecords.forEach(record => {
+                if (!record.id) {
+                    record.id = generateUniqueId();
+                    changed = true;
+                }
+                records.push(record);
+            });
+
+            if (changed) {
+                localStorage.setItem('smokeTrackRecords', JSON.stringify(records));
+            }
+
+            // Sort records by date descending for display
+            records.sort((a, b) => new Date(b.date) - new Date(a.date));
+            displayRecords();
+            updateStatistics();
+            renderCharts();
+        }
+
+        function displayRecords() {
+            recordList.innerHTML = '';
+            if (records.length === 0) {
+                recordList.innerHTML = '<p style="text-align: center; color: #d1d5db;">Aucune consommation enregistrée pour le moment.</p>';
+                return;
+            }
+
+            records.forEach(record => {
+                const div = document.createElement('div');
+                div.className = 'record-item';
+                div.dataset.id = record.id;
+
+                div.innerHTML = `
+                    <span class="date">${formatDate(record.date)}</span>
+                    <span class="count">${record.count} cigarette(s)</span>
+                    <div class="record-actions">
+                        <button class="btn-action btn-edit" data-id="${record.id}" title="Modifier cet enregistrement">✏️ Modifier</button>
+                        <button class="btn-action btn-delete" data-id="${record.id}" title="Supprimer cet enregistrement">🗑️ Supprimer</button>
+                    </div>
+                `;
+
+                const btnDelete = div.querySelector('.btn-delete');
+                const btnEdit = div.querySelector('.btn-edit');
+
+                btnDelete.addEventListener('click', e => {
+                    e.stopPropagation();
+                    const recordIdToDelete = e.target.dataset.id;
+                    const recordToDelete = records.find(r => r.id === recordIdToDelete);
+                    if (confirm(`Supprimer l'enregistrement du ${formatDate(recordToDelete.date)} (${recordToDelete.count} cigarettes) ?`)) {
+                        records = records.filter(r => r.id !== recordIdToDelete);
+                        localStorage.setItem('smokeTrackRecords', JSON.stringify(records));
+                        loadRecords(); // Reload to update list, stats, and charts
+                    }
+                });
+
+                btnEdit.addEventListener('click', e => {
+                    e.stopPropagation();
+                    const recordIdToEdit = e.target.dataset.id;
+                    const recordToEdit = records.find(r => r.id === recordIdToEdit);
+
+                    if (recordToEdit) {
+                        recordDateInput.value = recordToEdit.date;
+                        cigaretteCountInput.value = recordToEdit.count;
+                        addUpdateBtn.textContent = 'Modifier l\'enregistrement ✏️';
+                        editingRecordId = recordIdToEdit;
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }
+                });
+
+                recordList.appendChild(div);
+            });
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return 'N/A';
+            const d = new Date(dateStr);
+            // Adjust for timezone offset to prevent date shifting for local storage dates
+            const userTimezoneOffset = d.getTimezoneOffset() * 60000;
+            const adjustedDate = new Date(d.getTime() + userTimezoneOffset);
+            return adjustedDate.toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' });
+        }
+
+        cigaretteForm.addEventListener('submit', e => {
+            e.preventDefault();
+
+            const date = recordDateInput.value;
+            const count = parseInt(cigaretteCountInput.value, 10);
+
+            if (!date) {
+                alert('Veuillez sélectionner une date.');
+                return;
+            }
+            if (isNaN(count) || count < 0) {
+                alert('Veuillez entrer un nombre de cigarettes valide (nombre positif).');
+                return;
+            }
+
+            const newRecord = {
+                date: date,
+                count: count
+            };
+
+            if (editingRecordId) {
+                const recordIndex = records.findIndex(r => r.id === editingRecordId);
+                if (recordIndex !== -1) {
+                    records[recordIndex] = { ...records[recordIndex], ...newRecord };
+                }
+                editingRecordId = null;
+                addUpdateBtn.textContent = 'Ajouter la consommation';
+            } else {
+                // Check if a record for this date already exists
+                const existingRecordIndex = records.findIndex(r => r.date === date);
+                if (existingRecordIndex !== -1) {
+                    if (confirm(`Un enregistrement existe déjà pour le ${formatDate(date)} avec ${records[existingRecordIndex].count} cigarettes. Voulez-vous le modifier à ${count} ?`)) {
+                         records[existingRecordIndex] = { ...records[existingRecordIndex], ...newRecord };
+                    } else {
+                        return; // User cancelled, do not add/update
+                    }
+                } else {
+                    newRecord.id = generateUniqueId();
+                    records.push(newRecord);
+                }
+            }
+
+            localStorage.setItem('smokeTrackRecords', JSON.stringify(records));
+            cigaretteForm.reset();
+            // Set current date as default for next entry
+            recordDateInput.valueAsDate = new Date(); 
+            loadRecords(); // Reload to update list, stats, and charts
+        });
+
+        function updateStatistics() {
+            const now = new Date();
+            now.setHours(0, 0, 0, 0); // Normalize to start of today
+
+            let totalToday = 0;
+            let totalThisWeek = 0;
+            let totalThisMonth = 0;
+            let last7DaysCounts = [];
+
+            records.forEach(record => {
+                const recordDate = new Date(record.date);
+                recordDate.setHours(0, 0, 0, 0);
+
+                // Total Today
+                if (recordDate.toDateString() === now.toDateString()) {
+                    totalToday += record.count;
+                }
+
+                // Total This Week (Sunday to Saturday for simplicity, adjust as needed)
+                const startOfWeek = new Date(now);
+                startOfWeek.setDate(now.getDate() - now.getDay()); // Go to Sunday
+                startOfWeek.setHours(0, 0, 0, 0);
+
+                if (recordDate >= startOfWeek && recordDate <= now) {
+                    totalThisWeek += record.count;
+                }
+
+                // Total This Month
+                const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+                startOfMonth.setHours(0, 0, 0, 0);
+
+                if (recordDate >= startOfMonth && recordDate <= now) {
+                    totalThisMonth += record.count;
+                }
+
+                // Last 7 Days Average
+                const sevenDaysAgo = new Date(now);
+                sevenDaysAgo.setDate(now.getDate() - 6); // Includes today
+                sevenDaysAgo.setHours(0, 0, 0, 0);
+
+                if (recordDate >= sevenDaysAgo && recordDate <= now) {
+                    last7DaysCounts.push({ date: recordDate.toDateString(), count: record.count });
+                }
+            });
+
+            // Calculate average for last 7 days
+            const dailyTotals = {};
+            last7DaysCounts.forEach(item => {
+                dailyTotals[item.date] = (dailyTotals[item.date] || 0) + item.count;
+            });
+
+            let sumLast7Days = 0;
+            let daysWithRecords = 0;
+            for (let i = 0; i < 7; i++) {
+                const date = new Date(now);
+                date.setDate(now.getDate() - i);
+                const dateString = date.toDateString();
+                if (dailyTotals[dateString] !== undefined) {
+                    sumLast7Days += dailyTotals[dateString];
+                    daysWithRecords++;
+                }
+            }
+            const avgDailyLast7Days = daysWithRecords > 0 ? (sumLast7Days / daysWithRecords).toFixed(1) : 0;
+
+
+            avgDailyLast7DaysElement.textContent = avgDailyLast7Days;
+            totalTodayElement.textContent = totalToday;
+            totalThisWeekElement.textContent = totalThisWeek;
+            totalThisMonthElement.textContent = totalThisMonth;
+        }
+
+        function renderCharts() {
+            // Group data by day, week, month
+            const dailyData = {};
+            const weeklyData = {};
+            const monthlyData = {};
+
+            records.forEach(record => {
+                const date = new Date(record.date);
+                date.setHours(0, 0, 0, 0); // Normalize to start of day
+
+                // Daily
+                const dayKey = date.toISOString().split('T')[0];
+                dailyData[dayKey] = (dailyData[dayKey] || 0) + record.count;
+
+                // Weekly (start of week - Sunday)
+                const startOfWeek = new Date(date);
+                startOfWeek.setDate(date.getDate() - date.getDay());
+                const weekKey = startOfWeek.toISOString().split('T')[0];
+                weeklyData[weekKey] = (weeklyData[weekKey] || 0) + record.count;
+
+                // Monthly
+                const monthKey = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
+                monthlyData[monthKey] = (monthlyData[monthKey] || 0) + record.count;
+            });
+
+            // Prepare data for charts, sorting by date
+            const sortedDailyLabels = Object.keys(dailyData).sort();
+            const sortedDailyCounts = sortedDailyLabels.map(label => dailyData[label]);
+
+            const sortedWeeklyLabels = Object.keys(weeklyData).sort();
+            const sortedWeeklyCounts = sortedWeeklyLabels.map(label => weeklyData[label]);
+
+            const sortedMonthlyLabels = Object.keys(monthlyData).sort();
+            const sortedMonthlyCounts = sortedMonthlyLabels.map(label => monthlyData[label]);
+
+            // Convert date strings to more readable format for charts
+            const readableDailyLabels = sortedDailyLabels.map(d => formatDate(d).replace(` ${new Date().getFullYear()}`, '')); // Remove current year if present
+            const readableWeeklyLabels = sortedWeeklyLabels.map(d => {
+                const startDate = new Date(d);
+                const endDate = new Date(startDate);
+                endDate.setDate(startDate.getDate() + 6);
+                return `${formatDate(startDate.toISOString().split('T')[0]).slice(0, -5)} - ${formatDate(endDate.toISOString().split('T')[0]).slice(0, -5)}`; // Short date range
+            });
+            const readableMonthlyLabels = sortedMonthlyLabels.map(m => {
+                const [year, month] = m.split('-');
+                return new Date(year, month - 1, 1).toLocaleDateString('fr-FR', { year: 'numeric', month: 'long' });
+            });
+
+
+            // Destroy existing chart instances if they exist
+            if (dailyChartInstance) dailyChartInstance.destroy();
+            if (weeklyChartInstance) weeklyChartInstance.destroy();
+            if (monthlyChartInstance) monthlyChartInstance.destroy();
+
+            // Render Daily Chart
+            const dailyCtx = document.getElementById('dailyChart').getContext('2d');
+            dailyChartInstance = new Chart(dailyCtx, {
+                type: 'bar',
+                data: {
+                    labels: readableDailyLabels,
+                    datasets: [{
+                        label: 'Cigarettes par jour',
+                        data: sortedDailyCounts,
+                        backgroundColor: 'rgba(76, 175, 80, 0.7)', // Green
+                        borderColor: 'rgba(76, 175, 80, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { color: '#d1d5db' },
+                            grid: { color: '#4B5563' }
+                        },
+                        x: {
+                            ticks: { color: '#d1d5db' },
+                            grid: { color: '#4B5563' }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        title: {
+                            display: true,
+                            text: 'Consommation journalière',
+                            color: '#FBBF24'
+                        }
+                    }
+                }
+            });
+
+            // Render Weekly Chart
+            const weeklyCtx = document.getElementById('weeklyChart').getContext('2d');
+            weeklyChartInstance = new Chart(weeklyCtx, {
+                type: 'line',
+                data: {
+                    labels: readableWeeklyLabels,
+                    datasets: [{
+                        label: 'Cigarettes par semaine',
+                        data: sortedWeeklyCounts,
+                        backgroundColor: 'rgba(251, 191, 36, 0.7)', // Yellow
+                        borderColor: 'rgba(251, 191, 36, 1)',
+                        borderWidth: 2,
+                        fill: false,
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { color: '#d1d5db' },
+                            grid: { color: '#4B5563' }
+                        },
+                        x: {
+                            ticks: { color: '#d1d5db' },
+                            grid: { color: '#4B5563' }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        title: {
+                            display: true,
+                            text: 'Consommation hebdomadaire',
+                            color: '#FBBF24'
+                        }
+                    }
+                }
+            });
+
+            // Render Monthly Chart
+            const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
+            monthlyChartInstance = new Chart(monthlyCtx, {
+                type: 'bar',
+                data: {
+                    labels: readableMonthlyLabels,
+                    datasets: [{
+                        label: 'Cigarettes par mois',
+                        data: sortedMonthlyCounts,
+                        backgroundColor: 'rgba(59, 130, 246, 0.7)', // Blue
+                        borderColor: 'rgba(59, 130, 246, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { color: '#d1d5db' },
+                            grid: { color: '#4B5563' }
+                        },
+                        x: {
+                            ticks: { color: '#d1d5db' },
+                            grid: { color: '#4B5563' }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        title: {
+                            display: true,
+                            text: 'Consommation mensuelle',
+                            color: '#FBBF24'
+                        }
+                    }
+                }
+            });
+        }
+
+
+        // Set today's date as default
+        window.addEventListener('load', () => {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = (today.getMonth() + 1).toString().padStart(2, '0');
+            const day = today.getDate().toString().padStart(2, '0');
+            recordDateInput.value = `${year}-${month}-${day}`;
+            loadRecords();
+        });
+
+        mainTitle.addEventListener('click', () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+    </script>
+</body>
+</html>
