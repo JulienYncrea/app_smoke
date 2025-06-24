@@ -8,6 +8,9 @@
     <link rel="apple-touch-icon" href="icon.png" />
     <meta name="theme-color" content="#111827" />
     <style>
+        html {
+            scroll-behavior: smooth; /* Smooth scrolling for anchor links */
+        }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
@@ -325,11 +328,11 @@
     <h1 id="mainTitle">SmokeTrack <span class="logo">🚭</span></h1>
 
     <div class="nav-buttons-container">
-        <a href="historiques.html" class="nav-button">
+        <a href="#historySection" class="nav-button">
             <span class="icon">📜</span>
             Historique
         </a>
-        <a href="tendances.html" class="nav-button">
+        <a href="#trendsSection" class="nav-button">
             <span class="icon">📈</span>
             Tendances
         </a>
@@ -352,7 +355,7 @@
         </form>
     </div>
 
-    <div class="container">
+    <div id="historySection" class="container">
         <h2>Historique des consommations</h2>
         <div id="recordList">
             </div>
@@ -377,7 +380,7 @@
         </div>
     </div>
 
-    <div class="container chart-container">
+    <div id="trendsSection" class="container chart-container">
         <h2>Tendances journalières (30 derniers jours)</h2>
         <canvas id="dailyChart"></canvas>
     </div>
