@@ -12,7 +12,7 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 1rem;
-            background: #1f2937;
+            background: #000000; /* Fond noir comme demandé */
             color: #f9fafb;
             line-height: 1.6;
         }
@@ -436,7 +436,7 @@
         const viewSections = document.querySelectorAll('.view-section');
 
         let records = [];
-        let editingRecordId = null;
+        let editingRecordId = null; // Used for editing initiated from the history list
 
         // Chart instances
         let dailyChartInstance = null;
@@ -458,7 +458,12 @@
                     record.id = generateUniqueId();
                     changed = true;
                 }
-                records.push(record);
+                // Only add records if count is not 0 (clean up old 0-count records on load)
+                if (record.count > 0) {
+                    records.push(record);
+                } else {
+                    changed = true; // Mark as changed if a 0-count record was removed
+                }
             });
 
             if (changed) {
@@ -515,8 +520,8 @@
                     if (recordToEdit) {
                         recordDateInput.value = recordToEdit.date;
                         cigaretteCountInput.value = recordToEdit.count;
-                        addUpdateBtn.textContent = 'Modifier l\'enregistrement ✏️';
-                        editingRecordId = recordIdToEdit;
+                        // addUpdateBtn.textContent = 'Modifier l\'enregistrement ✏️'; // Removed as per request
+                        editingRecordId = recordIdToEdit; // Still track for internal update logic
                         showView('consumptionView'); // Switch to consumption view for editing
                         window.scrollTo({ top: 0, behavior: 'smooth' }); // Scroll to top of the view
                     }
@@ -546,32 +551,35 @@
                 return;
             }
             if (isNaN(count) || count < 0) {
-                alert('Veuillez entrer un nombre de cigarettes valide (nombre positif).');
+                alert('Veuillez entrer un nombre de cigarettes valide (nombre positif ou zéro).');
                 return;
             }
 
-            const newRecord = {
-                date: date,
-                count: count
-            };
+            const existingRecordIndex = records.findIndex(r => r.date === date);
 
-            if (editingRecordId) {
-                const recordIndex = records.findIndex(r => r.id === editingRecordId);
-                if (recordIndex !== -1) {
-                    records[recordIndex] = { ...records[recordIndex], ...newRecord };
+            if (count === 0) {
+                // If count is 0, delete the record if it exists
+                if (editingRecordId) { // If editing an existing record from history list
+                    records = records.filter(r => r.id !== editingRecordId);
+                } else if (existingRecordIndex !== -1) { // If a record for this date already exists
+                    records.splice(existingRecordIndex, 1);
                 }
-                editingRecordId = null;
-                addUpdateBtn.textContent = 'Ajouter la consommation';
+                // If it's a new submission for count 0 and no existing record, just don't add.
             } else {
-                // Check if a record for this date already exists
-                const existingRecordIndex = records.findIndex(r => r.date === date);
-                if (existingRecordIndex !== -1) {
+                // If count is > 0, add or update
+                const newRecord = { date: date, count: count };
+                if (editingRecordId) { // Editing initiated from history list
+                    const recordIndex = records.findIndex(r => r.id === editingRecordId);
+                    if (recordIndex !== -1) {
+                        records[recordIndex] = { ...records[recordIndex], ...newRecord };
+                    }
+                } else if (existingRecordIndex !== -1) { // Record for date already exists, update it
                     if (confirm(`Un enregistrement existe déjà pour le ${formatDate(date)} avec ${records[existingRecordIndex].count} cigarettes. Voulez-vous le modifier à ${count} ?`)) {
                          records[existingRecordIndex] = { ...records[existingRecordIndex], ...newRecord };
                     } else {
-                        return; // User cancelled, do not add/update
+                        return; // User cancelled
                     }
-                } else {
+                } else { // No existing record for this date, add new
                     newRecord.id = generateUniqueId();
                     records.push(newRecord);
                 }
@@ -581,8 +589,10 @@
             cigaretteForm.reset();
             // Set current date as default for next entry
             recordDateInput.valueAsDate = new Date(); 
-            // Reset count input to 0 after submission if not editing
+            // Reset count input to 0 after submission
             cigaretteCountInput.value = 0; 
+            editingRecordId = null; // Always reset after submission, regardless of edit or new
+            addUpdateBtn.textContent = 'Ajouter la consommation'; // Always reset button text
             loadRecords(); // Reload to update list, stats, and charts
         });
 
@@ -870,11 +880,11 @@
             const existingRecord = records.find(r => r.date === selectedDate);
             if (existingRecord) {
                 cigaretteCountInput.value = existingRecord.count;
-                addUpdateBtn.textContent = 'Modifier l\'enregistrement ✏️'; // Change button text to indicate modification
-                editingRecordId = existingRecord.id; // Set editing ID if record exists
+                // addUpdateBtn.textContent = 'Modifier l\'enregistrement ✏️'; // Removed as per request
+                editingRecordId = existingRecord.id; // Still track for internal update logic
             } else {
                 cigaretteCountInput.value = 0;
-                addUpdateBtn.textContent = 'Ajouter la consommation'; // Reset button text
+                addUpdateBtn.textContent = 'Ajouter la consommation'; // Always keep this text
                 editingRecordId = null; // Clear editing ID
             }
         });
@@ -892,9 +902,12 @@
                     button.classList.add('active');
                 }
             });
-            // Ensure charts re-render when their view becomes active (if needed for responsiveness)
+            // Ensure charts re-render/update when their view becomes active
             if (viewId === 'trendsView') {
-                 // Chart.js handles responsiveness on its own, but a resize event can sometimes help on tab switches
+                 if (dailyChartInstance) dailyChartInstance.update();
+                 if (weeklyChartInstance) weeklyChartInstance.update();
+                 if (monthlyChartInstance) monthlyChartInstance.update();
+                 // Also resize might be needed if container was hidden and size changed
                  if (dailyChartInstance) dailyChartInstance.resize();
                  if (weeklyChartInstance) weeklyChartInstance.resize();
                  if (monthlyChartInstance) monthlyChartInstance.resize();
