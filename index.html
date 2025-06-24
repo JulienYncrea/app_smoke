@@ -8,14 +8,11 @@
     <link rel="apple-touch-icon" href="icon.png" />
     <meta name="theme-color" content="#111827" />
     <style>
-        html {
-            scroll-behavior: smooth; /* Smooth scrolling for anchor links */
-        }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 1rem;
-            background: #000000;
+            background: #1f2937;
             color: #f9fafb;
             line-height: 1.6;
         }
@@ -32,17 +29,17 @@
             color: #4CAF50;
             cursor: pointer;
             font-size: 2em;
-            margin-bottom: 1rem; /* Adjusted margin to make space for new buttons */
+            margin-bottom: 1rem;
         }
         #mainTitle .logo {
             font-size: 1.2em;
         }
 
-        /* New styles for navigation buttons */
+        /* Styles for navigation buttons */
         .nav-buttons-container {
             display: flex;
             justify-content: center;
-            gap: 1rem; /* Space between buttons */
+            gap: 1rem;
             margin-bottom: 2rem;
         }
 
@@ -51,9 +48,9 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            width: 80px; /* Width of the round button */
-            height: 80px; /* Height of the round button */
-            border-radius: 50%; /* Make it round */
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
             background: #2563eb; /* Blue for navigation */
             color: #ffffff;
             text-decoration: none;
@@ -63,6 +60,8 @@
             padding: 0.5rem;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
             transition: background-color 0.3s ease, transform 0.1s ease;
+            border: none; /* Ensure no default button border */
+            cursor: pointer;
         }
 
         .nav-button:hover {
@@ -70,15 +69,25 @@
             transform: translateY(-2px);
         }
 
-        .nav-button:active {
+        .nav-button:active, .nav-button.active {
+            background: #1d4ed8; /* Darker blue for active state */
             transform: translateY(0);
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3); /* Inner shadow for pressed effect */
         }
 
         .nav-button .icon {
-            font-size: 1.8em; /* Icon size */
+            font-size: 1.8em;
             margin-bottom: 0.2em;
         }
 
+        /* View sections visibility */
+        .view-section {
+            display: none; /* Hidden by default */
+        }
+
+        .view-section.active {
+            display: block; /* Shown when active */
+        }
 
         .container {
             max-width: 600px;
@@ -117,7 +126,7 @@
             -webkit-appearance: none;
             margin: 0;
         }
-        button {
+        button[type="submit"], button.btn-action { /* Adjusted to target specific buttons */
             margin-top: 1.5rem;
             background: #4CAF50; /* Vert */
             color: #ffffff;
@@ -127,11 +136,11 @@
             font-size: 1.1rem;
             border: none;
         }
-        button:hover {
+        button[type="submit"]:hover, button.btn-action:hover {
             background: #45a049;
             transform: translateY(-1px);
         }
-        button:active {
+        button[type="submit"]:active, button.btn-action:active {
             transform: translateY(0);
         }
 
@@ -179,6 +188,7 @@
             padding: 0.4rem 0.8rem;
             border-radius: 0.3rem;
             transition: background-color 0.3s ease;
+            margin-top: 0; /* Override global margin-top for action buttons */
         }
         .btn-action:hover {
             background: #b91c1c;
@@ -328,71 +338,81 @@
     <h1 id="mainTitle">SmokeTrack <span class="logo">🚭</span></h1>
 
     <div class="nav-buttons-container">
-        <a href="#historySection" class="nav-button">
+        <button class="nav-button active" data-target="consumptionView">
+            <span class="icon">🚬</span>
+            Consommation
+        </button>
+        <button class="nav-button" data-target="historyView">
             <span class="icon">📜</span>
             Historique
-        </a>
-        <a href="#trendsSection" class="nav-button">
+        </button>
+        <button class="nav-button" data-target="trendsView">
             <span class="icon">📈</span>
             Tendances
-        </a>
+        </button>
     </div>
 
-    <div class="container">
-        <h2>Ajouter votre consommation</h2>
-        <form id="cigaretteForm">
-            <label for="recordDate">Date</label>
-            <input type="date" id="recordDate" required />
+    <div id="consumptionView" class="view-section active">
+        <div class="container">
+            <h2>Ajouter votre consommation</h2>
+            <form id="cigaretteForm">
+                <label for="recordDate">Date</label>
+                <input type="date" id="recordDate" required />
 
-            <label for="cigaretteCount">Nombre de cigarettes</label>
-            <div class="count-input-group">
-                <button type="button" id="decrementCount" class="count-button decrement">-</button>
-                <input type="number" id="cigaretteCount" min="0" value="0" required />
-                <button type="button" id="incrementCount" class="count-button">+</button>
+                <label for="cigaretteCount">Nombre de cigarettes</label>
+                <div class="count-input-group">
+                    <button type="button" id="decrementCount" class="count-button decrement">-</button>
+                    <input type="number" id="cigaretteCount" min="0" value="0" required />
+                    <button type="button" id="incrementCount" class="count-button">+</button>
+                </div>
+
+                <button type="submit" id="addUpdateBtn">Ajouter la consommation</button>
+            </form>
+        </div>
+
+        <div class="container stats-section">
+            <div class="stat-card">
+                <h3>Moyenne quotidienne (7j)</h3>
+                <p id="avgDailyLast7Days">0</p>
             </div>
-
-            <button type="submit" id="addUpdateBtn">Ajouter la consommation</button>
-        </form>
-    </div>
-
-    <div id="historySection" class="container">
-        <h2>Historique des consommations</h2>
-        <div id="recordList">
+            <div class="stat-card">
+                <h3>Total aujourd'hui</h3>
+                <p id="totalToday">0</p>
             </div>
-    </div>
-
-    <div class="container stats-section">
-        <div class="stat-card">
-            <h3>Moyenne quotidienne (7j)</h3>
-            <p id="avgDailyLast7Days">0</p>
-        </div>
-        <div class="stat-card">
-            <h3>Total aujourd'hui</h3>
-            <p id="totalToday">0</p>
-        </div>
-        <div class="stat-card">
-            <h3>Total cette semaine</h3>
-            <p id="totalThisWeek">0</p>
-        </div>
-        <div class="stat-card">
-            <h3>Total ce mois</h3>
-            <p id="totalThisMonth">0</p>
+            <div class="stat-card">
+                <h3>Total cette semaine</h3>
+                <p id="totalThisWeek">0</p>
+            </div>
+            <div class="stat-card">
+                <h3>Total ce mois</h3>
+                <p id="totalThisMonth">0</p>
+            </div>
         </div>
     </div>
 
-    <div id="trendsSection" class="container chart-container">
-        <h2>Tendances journalières (30 derniers jours)</h2>
-        <canvas id="dailyChart"></canvas>
+    <div id="historyView" class="view-section">
+        <div class="container">
+            <h2>Historique des consommations</h2>
+            <div id="recordList">
+                </div>
+        </div>
     </div>
 
-    <div class="container chart-container">
-        <h2>Tendances hebdomadaires</h2>
-        <canvas id="weeklyChart"></canvas>
-    </div>
+    <div id="trendsView" class="view-section">
+        <div class="container chart-container">
+            <h2>Tendances journalières (30 derniers jours)</h2>
+            <canvas id="dailyChart"></canvas>
+        </div>
 
-    <div class="container chart-container">
-        <h2>Tendances mensuelles</h2>
-        <canvas id="monthlyChart"></canvas>
+        <div class="container chart-container">
+            <h2>Tendances hebdomadaires</h2>
+            <canvas id="weeklyChart"></canvas>
+        </div>
+
+        <div class="container chart-container">
+            <h2>Tendances mensuelles</h2>
+            <canvas id="monthlyChart"></canvas>
+        </div>
     </div>
 
     <script>
@@ -410,6 +430,10 @@
         const totalTodayElement = document.getElementById('totalToday');
         const totalThisWeekElement = document.getElementById('totalThisWeek');
         const totalThisMonthElement = document.getElementById('totalThisMonth');
+
+        // Navigation elements
+        const navButtons = document.querySelectorAll('.nav-button');
+        const viewSections = document.querySelectorAll('.view-section');
 
         let records = [];
         let editingRecordId = null;
@@ -493,7 +517,8 @@
                         cigaretteCountInput.value = recordToEdit.count;
                         addUpdateBtn.textContent = 'Modifier l\'enregistrement ✏️';
                         editingRecordId = recordIdToEdit;
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                        showView('consumptionView'); // Switch to consumption view for editing
+                        window.scrollTo({ top: 0, behavior: 'smooth' }); // Scroll to top of the view
                     }
                 });
 
@@ -854,19 +879,48 @@
             }
         });
 
-        // Set today's date as default on load
+        // Navigation logic
+        function showView(viewId) {
+            viewSections.forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById(viewId).classList.add('active');
+
+            navButtons.forEach(button => {
+                button.classList.remove('active');
+                if (button.dataset.target === viewId) {
+                    button.classList.add('active');
+                }
+            });
+            // Ensure charts re-render when their view becomes active (if needed for responsiveness)
+            if (viewId === 'trendsView') {
+                 // Chart.js handles responsiveness on its own, but a resize event can sometimes help on tab switches
+                 if (dailyChartInstance) dailyChartInstance.resize();
+                 if (weeklyChartInstance) weeklyChartInstance.resize();
+                 if (monthlyChartInstance) monthlyChartInstance.resize();
+            }
+        }
+
+        navButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                showView(button.dataset.target);
+            });
+        });
+
+        // Set today's date as default on load and load records
         window.addEventListener('load', () => {
             const today = new Date();
             const year = today.getFullYear();
             const month = (today.getMonth() + 1).toString().padStart(2, '0');
             const day = today.getDate().toString().padStart(2, '0');
             recordDateInput.value = `${year}-${month}-${day}`;
-            loadRecords(); // Load records and then trigger date change to populate count if needed
-            // Manually trigger change event for initial population based on today's date
-            recordDateInput.dispatchEvent(new Event('change')); 
+            loadRecords(); // This will also render charts
+            recordDateInput.dispatchEvent(new Event('change')); // Manually trigger change event for initial population
+            showView('consumptionView'); // Show consumption view by default
         });
 
         mainTitle.addEventListener('click', () => {
+            showView('consumptionView'); // Go back to consumption view when title is clicked
             window.scrollTo({ top: 0, behavior: 'smooth' });
         });
 
