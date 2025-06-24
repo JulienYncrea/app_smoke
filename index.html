@@ -307,40 +307,38 @@
                 width: 100%;
                 justify-content: flex-end;
             }
+            /* Stats cards smaller on mobile and 2 columns */
             .stats-section {
-                grid-template-columns: 1fr;
+                grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); /* 2 colonnes pour les statistiques */
+                gap: 0.5rem; /* Espacement réduit */
             }
-            /* Stats cards smaller on mobile */
             .stat-card {
-                padding: 0.7rem; /* Réduire le padding */
+                padding: 0.5rem; /* Réduire le padding encore */
             }
             .stat-card h3 {
-                font-size: 1em; /* Réduire la taille de la police */
+                font-size: 0.9em; /* Texte encore plus petit pour les titres */
             }
             .stat-card p {
-                font-size: 1.5em; /* Réduire la taille de la police */
+                font-size: 1.3em; /* Texte encore plus petit pour les valeurs */
             }
 
             .count-input-group {
                 flex-wrap: nowrap; /* Empêche le retour à la ligne des boutons */
-                /* width: auto; ou flex-grow: 1; pour l'input devrait suffire avec nowrap */
             }
             .count-input-group input[type="number"] {
-                /* On enlève cette règle car flex-grow: 1; est plus flexible avec nowrap */
                 width: auto; 
             }
             .nav-buttons-container {
-                /* Supprimez : flex-direction: column; */
-                align-items: center; /* Assurez-vous qu'ils restent centrés */
-                gap: 0.5rem; /* Réduire l'espace entre les boutons si nécessaire */
+                align-items: center; 
+                gap: 0.5rem; 
             }
             .nav-button {
-                width: 65px; /* Nouvelle taille pour mobile */
-                height: 65px; /* Nouvelle taille pour mobile */
-                font-size: 0.7em; /* Ajustement de la taille de la police */
+                width: 65px; 
+                height: 65px; 
+                font-size: 0.65em; /* Texte des boutons encore plus petit */
             }
             .nav-button .icon {
-                font-size: 1.6em; /* Ajustement de la taille de l'icône */
+                font-size: 1.5em; /* Icône légèrement plus petite */
             }
         }
     </style>
