@@ -443,6 +443,13 @@
         let weeklyChartInstance = null;
         let monthlyChartInstance = null;
 
+        // Data holders for charts
+        let chartData = {
+            dailyLabels: [], dailyCounts: [],
+            weeklyLabels: [], weeklyCounts: [],
+            monthlyLabels: [], monthlyCounts: []
+        };
+
         function generateUniqueId() {
             return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
         }
@@ -452,14 +459,13 @@
             records = [];
             let changed = false;
 
-            // Ensure all records have an ID
+            // Ensure all records have an ID and filter out 0-count records
             storedRecords.forEach(record => {
                 if (!record.id) {
                     record.id = generateUniqueId();
                     changed = true;
                 }
-                // Only add records if count is not 0 (clean up old 0-count records on load)
-                if (record.count > 0) {
+                if (record.count > 0) { // Only keep records with count > 0
                     records.push(record);
                 } else {
                     changed = true; // Mark as changed if a 0-count record was removed
@@ -474,7 +480,7 @@
             records.sort((a, b) => new Date(b.date) - new Date(a.date));
             displayRecords();
             updateStatistics();
-            renderCharts();
+            prepareChartData(); // Prepare chart data after records are loaded/updated
         }
 
         function displayRecords() {
@@ -550,7 +556,7 @@
                 alert('Veuillez sélectionner une date.');
                 return;
             }
-            if (isNaN(count) || count < 0) {
+            if (isNaN(count) || count < 0) { // Allow 0 to enable deletion
                 alert('Veuillez entrer un nombre de cigarettes valide (nombre positif ou zéro).');
                 return;
             }
@@ -564,7 +570,7 @@
                 } else if (existingRecordIndex !== -1) { // If a record for this date already exists
                     records.splice(existingRecordIndex, 1);
                 }
-                // If it's a new submission for count 0 and no existing record, just don't add.
+                // If it's a new submission for count 0 and no existing record, simply do nothing (don't add it).
             } else {
                 // If count is > 0, add or update
                 const newRecord = { date: date, count: count };
@@ -667,44 +673,29 @@
             totalThisMonthElement.textContent = totalThisMonth;
         }
 
-        function renderCharts() {
-            // Group data by day, week, month
+        // NEW: Prepare chart data, but don't render charts yet
+        function prepareChartData() {
             const dailyData = {};
             const weeklyData = {};
             const monthlyData = {};
 
             records.forEach(record => {
                 const date = new Date(record.date);
-                date.setHours(0, 0, 0, 0); // Normalize to start of day
+                date.setHours(0, 0, 0, 0);
 
-                // Daily
                 const dayKey = date.toISOString().split('T')[0];
                 dailyData[dayKey] = (dailyData[dayKey] || 0) + record.count;
 
-                // Weekly (start of week - Sunday)
                 const startOfWeek = new Date(date);
                 startOfWeek.setDate(date.getDate() - date.getDay());
                 const weekKey = startOfWeek.toISOString().split('T')[0];
                 weeklyData[weekKey] = (weeklyData[weekKey] || 0) + record.count;
 
-                // Monthly
                 const monthKey = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
                 monthlyData[monthKey] = (monthlyData[monthKey] || 0) + record.count;
             });
 
-            // Prepare data for charts, sorting by date
-            const sortedDailyLabels = Object.keys(dailyData).sort();
-            const sortedDailyCounts = sortedDailyLabels.map(label => dailyData[label]);
-
-            const sortedWeeklyLabels = Object.keys(weeklyData).sort();
-            const sortedWeeklyCounts = sortedWeeklyLabels.map(label => weeklyData[label]);
-
-            const sortedMonthlyLabels = Object.keys(monthlyData).sort();
-            const sortedMonthlyCounts = sortedMonthlyLabels.map(label => monthlyData[label]);
-
-            // Limit daily chart to last 30 days
             const limitDays = 30;
-            // Generate labels and data for the last 'limitDays' days, even if no data
             const today = new Date();
             today.setHours(0, 0, 0, 0);
             const dailyChartLabels = [];
@@ -714,41 +705,49 @@
                 const d = new Date(today);
                 d.setDate(today.getDate() - i);
                 const dateKey = d.toISOString().split('T')[0];
-                const displayDate = formatDate(dateKey).replace(` ${d.getFullYear()}`, ''); // Remove current year
+                const displayDate = formatDate(dateKey).replace(` ${d.getFullYear()}`, '');
                 
                 dailyChartLabels.push(displayDate);
-                dailyChartData.push(dailyData[dateKey] || 0); // Use 0 if no record for that day
+                dailyChartData.push(dailyData[dateKey] || 0);
             }
 
-
-            // Convert date strings to more readable format for charts
+            const sortedWeeklyLabels = Object.keys(weeklyData).sort();
             const readableWeeklyLabels = sortedWeeklyLabels.map(d => {
                 const startDate = new Date(d);
                 const endDate = new Date(startDate);
                 endDate.setDate(startDate.getDate() + 6);
-                return `${formatDate(startDate.toISOString().split('T')[0]).slice(0, -5)} - ${formatDate(endDate.toISOString().split('T')[0]).slice(0, -5)}`; // Short date range
+                return `${formatDate(startDate.toISOString().split('T')[0]).slice(0, -5)} - ${formatDate(endDate.toISOString().split('T')[0]).slice(0, -5)}`;
             });
+            const sortedWeeklyCounts = sortedWeeklyLabels.map(label => weeklyData[label]);
+
+            const sortedMonthlyLabels = Object.keys(monthlyData).sort();
             const readableMonthlyLabels = sortedMonthlyLabels.map(m => {
                 const [year, month] = m.split('-');
                 return new Date(year, month - 1, 1).toLocaleDateString('fr-FR', { year: 'numeric', month: 'long' });
             });
+            const sortedMonthlyCounts = sortedMonthlyLabels.map(label => monthlyData[label]);
 
+            // Store prepared data globally
+            chartData.dailyLabels = dailyChartLabels;
+            chartData.dailyCounts = dailyChartData;
+            chartData.weeklyLabels = readableWeeklyLabels;
+            chartData.weeklyCounts = sortedWeeklyCounts;
+            chartData.monthlyLabels = readableMonthlyLabels;
+            chartData.monthlyCounts = sortedMonthlyCounts;
+        }
 
-            // Destroy existing chart instances if they exist
-            if (dailyChartInstance) dailyChartInstance.destroy();
-            if (weeklyChartInstance) weeklyChartInstance.destroy();
-            if (monthlyChartInstance) monthlyChartInstance.destroy();
-
-            // Render Daily Chart
+        // NEW: Individual chart rendering functions, called only when view is active
+        function renderDailyChart() {
+            if (dailyChartInstance) dailyChartInstance.destroy(); // Destroy previous instance
             const dailyCtx = document.getElementById('dailyChart').getContext('2d');
             dailyChartInstance = new Chart(dailyCtx, {
                 type: 'bar',
                 data: {
-                    labels: dailyChartLabels, // Use the new limited labels
+                    labels: chartData.dailyLabels,
                     datasets: [{
                         label: 'Cigarettes par jour',
-                        data: dailyChartData, // Use the new limited data
-                        backgroundColor: 'rgba(76, 175, 80, 0.7)', // Green
+                        data: chartData.dailyCounts,
+                        backgroundColor: 'rgba(76, 175, 80, 0.7)',
                         borderColor: 'rgba(76, 175, 80, 1)',
                         borderWidth: 1
                     }]
@@ -757,41 +756,28 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: { color: '#d1d5db' },
-                            grid: { color: '#4B5563' }
-                        },
-                        x: {
-                            ticks: { 
-                                color: '#d1d5db',
-                                maxTicksLimit: 10, // Limit visible ticks
-                                autoSkip: true // Enable auto-skipping of labels for better readability
-                            },
-                            grid: { color: '#4B5563' }
-                        }
+                        y: { beginAtZero: true, ticks: { color: '#d1d5db' }, grid: { color: '#4B5563' } },
+                        x: { ticks: { color: '#d1d5db', maxTicksLimit: 10, autoSkip: true }, grid: { color: '#4B5563' } }
                     },
                     plugins: {
                         legend: { display: false },
-                        title: {
-                            display: true,
-                            text: 'Consommation journalière',
-                            color: '#FBBF24'
-                        }
+                        title: { display: true, text: 'Consommation journalière', color: '#FBBF24' }
                     }
                 }
             });
+        }
 
-            // Render Weekly Chart
+        function renderWeeklyChart() {
+            if (weeklyChartInstance) weeklyChartInstance.destroy(); // Destroy previous instance
             const weeklyCtx = document.getElementById('weeklyChart').getContext('2d');
             weeklyChartInstance = new Chart(weeklyCtx, {
                 type: 'line',
                 data: {
-                    labels: readableWeeklyLabels,
+                    labels: chartData.weeklyLabels,
                     datasets: [{
                         label: 'Cigarettes par semaine',
-                        data: sortedWeeklyCounts,
-                        backgroundColor: 'rgba(251, 191, 36, 0.7)', // Yellow
+                        data: chartData.weeklyCounts,
+                        backgroundColor: 'rgba(251, 191, 36, 0.7)',
                         borderColor: 'rgba(251, 191, 36, 1)',
                         borderWidth: 2,
                         fill: false,
@@ -802,37 +788,28 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: { color: '#d1d5db' },
-                            grid: { color: '#4B5563' }
-                        },
-                        x: {
-                            ticks: { color: '#d1d5db' },
-                            grid: { color: '#4B5563' }
-                        }
+                        y: { beginAtZero: true, ticks: { color: '#d1d5db' }, grid: { color: '#4B5563' } },
+                        x: { ticks: { color: '#d1d5db' }, grid: { color: '#4B5563' } }
                     },
                     plugins: {
                         legend: { display: false },
-                        title: {
-                            display: true,
-                            text: 'Consommation hebdomadaire',
-                            color: '#FBBF24'
-                        }
+                        title: { display: true, text: 'Consommation hebdomadaire', color: '#FBBF24' }
                     }
                 }
             });
+        }
 
-            // Render Monthly Chart
+        function renderMonthlyChart() {
+            if (monthlyChartInstance) monthlyChartInstance.destroy(); // Destroy previous instance
             const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
             monthlyChartInstance = new Chart(monthlyCtx, {
                 type: 'bar',
                 data: {
-                    labels: readableMonthlyLabels,
+                    labels: chartData.monthlyLabels,
                     datasets: [{
                         label: 'Cigarettes par mois',
-                        data: sortedMonthlyCounts,
-                        backgroundColor: 'rgba(59, 130, 246, 0.7)', // Blue
+                        data: chartData.monthlyCounts,
+                        backgroundColor: 'rgba(59, 130, 246, 0.7)',
                         borderColor: 'rgba(59, 130, 246, 1)',
                         borderWidth: 1
                     }]
@@ -841,53 +818,16 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: { color: '#d1d5db' },
-                            grid: { color: '#4B5563' }
-                        },
-                        x: {
-                            ticks: { color: '#d1d5db' },
-                            grid: { color: '#4B5563' }
-                        }
+                        y: { beginAtZero: true, ticks: { color: '#d1d5db' }, grid: { color: '#4B5563' } },
+                        x: { ticks: { color: '#d1d5db' }, grid: { color: '#4B5563' } }
                     },
                     plugins: {
                         legend: { display: false },
-                        title: {
-                            display: true,
-                            text: 'Consommation mensuelle',
-                            color: '#FBBF24'
-                        }
+                        title: { display: true, text: 'Consommation mensuelle', color: '#FBBF24' }
                     }
                 }
             });
         }
-
-        // Event listeners for increment/decrement buttons
-        incrementButton.addEventListener('click', () => {
-            let currentCount = parseInt(cigaretteCountInput.value, 10);
-            cigaretteCountInput.value = isNaN(currentCount) ? 1 : currentCount + 1;
-        });
-
-        decrementButton.addEventListener('click', () => {
-            let currentCount = parseInt(cigaretteCountInput.value, 10);
-            cigaretteCountInput.value = (isNaN(currentCount) || currentCount <= 0) ? 0 : currentCount - 1;
-        });
-
-        // Event listener for date input change to update cigarette count field
-        recordDateInput.addEventListener('change', () => {
-            const selectedDate = recordDateInput.value;
-            const existingRecord = records.find(r => r.date === selectedDate);
-            if (existingRecord) {
-                cigaretteCountInput.value = existingRecord.count;
-                // addUpdateBtn.textContent = 'Modifier l\'enregistrement ✏️'; // Removed as per request
-                editingRecordId = existingRecord.id; // Still track for internal update logic
-            } else {
-                cigaretteCountInput.value = 0;
-                addUpdateBtn.textContent = 'Ajouter la consommation'; // Always keep this text
-                editingRecordId = null; // Clear editing ID
-            }
-        });
 
         // Navigation logic
         function showView(viewId) {
@@ -902,15 +842,12 @@
                     button.classList.add('active');
                 }
             });
-            // Ensure charts re-render/update when their view becomes active
-            if (viewId === 'trendsView') {
-                 if (dailyChartInstance) dailyChartInstance.update();
-                 if (weeklyChartInstance) weeklyChartInstance.update();
-                 if (monthlyChartInstance) monthlyChartInstance.update();
-                 // Also resize might be needed if container was hidden and size changed
-                 if (dailyChartInstance) dailyChartInstance.resize();
-                 if (weeklyChartInstance) weeklyChartInstance.resize();
-                 if (monthlyChartInstance) monthlyChartInstance.resize();
+            
+            // Render charts only when the trends view is active and data is ready
+            if (viewId === 'trendsView' && chartData.dailyLabels.length > 0) {
+                renderDailyChart();
+                renderWeeklyChart();
+                renderMonthlyChart();
             }
         }
 
@@ -927,7 +864,7 @@
             const month = (today.getMonth() + 1).toString().padStart(2, '0');
             const day = today.getDate().toString().padStart(2, '0');
             recordDateInput.value = `${year}-${month}-${day}`;
-            loadRecords(); // This will also render charts
+            loadRecords(); // This will prepare chart data
             recordDateInput.dispatchEvent(new Event('change')); // Manually trigger change event for initial population
             showView('consumptionView'); // Show consumption view by default
         });
