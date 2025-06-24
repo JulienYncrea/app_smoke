@@ -1,6 +1,6 @@
 {
-    "name": "Stop Smoke",
-    "short_name": "Stop Smoke",
+    "name": "SmokeTrack",
+    "short_name": "SmokeTrack",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#000000",
