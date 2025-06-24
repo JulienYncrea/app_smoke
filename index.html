@@ -231,8 +231,20 @@
             max-height: 400px; /* Reverté comme demandé */
             overflow: hidden; /* Reverté comme demandé */
         }
+        /* Style for the chart titles that are INSIDE the grey container, below the canvas */
         .chart-container h2 {
+            text-align: center;
+            color: #4CAF50;
+            margin-top: 1rem; /* Adjusted margin to place below canvas */
             margin-bottom: 1rem;
+        }
+        /* Style for the new main titles OUTSIDE the grey containers */
+        .chart-main-title {
+            text-align: center;
+            color: #FBBF24; /* Yellow for main chart titles */
+            margin-top: 2rem; /* More space above */
+            margin-bottom: 1rem; /* Space below */
+            font-size: 1.8em; /* Larger font size */
         }
 
         /* Enforce canvas height and display */
@@ -251,11 +263,12 @@
             display: flex;
             align-items: center;
             gap: 0.5rem;
-            width: 100%;
         }
         .count-input-group input[type="number"] {
             flex-grow: 1; /* Allows the input to take available space */
             margin-top: 0; /* Remove default margin-top from global input rule */
+            max-width: 100px;
+
         }
         .count-input-group .count-button {
             width: 40px; /* Fixed width for buttons */
@@ -374,7 +387,7 @@
 
     <div id="consumptionView" class="view-section active">
         <div class="container">
-            <h2>Ajouter votre consommation</h2>
+            <h2>Add your consumption</h2>
             <form id="cigaretteForm">
                 <label for="recordDate">Date</label>
                 <input type="date" id="recordDate" required />
@@ -422,19 +435,22 @@
     </div>
 
     <div id="trendsView" class="view-section">
+        <h2 class="chart-main-title">Tendances de consommation journalière</h2>
         <div class="container chart-container">
-            <h2>Tendances journalières (30 derniers jours)</h2>
             <canvas id="dailyChart"></canvas>
+            <h2>Tendances journalières (30 derniers jours)</h2>
         </div>
 
+        <h2 class="chart-main-title">Tendances de consommation hebdomadaire</h2>
         <div class="container chart-container">
-            <h2>Tendances hebdomadaires</h2>
             <canvas id="weeklyChart"></canvas>
+            <h2>Tendances hebdomadaires</h2>
         </div>
 
+        <h2 class="chart-main-title">Tendances de consommation mensuelle</h2>
         <div class="container chart-container">
-            <h2>Tendances mensuelles</h2>
             <canvas id="monthlyChart"></canvas>
+            <h2>Tendances mensuelles</h2>
         </div>
     </div>
 
@@ -624,7 +640,7 @@
             }
             const count = parseInt(value, 10);
             if (!isNaN(count) && count >= 0) {
-                 saveOrUpdateConsumption();
+                saveOrUpdateConsumption();
             }
         });
 
@@ -805,7 +821,7 @@
                     },
                     plugins: {
                         legend: { display: false },
-                        title: { display: true, text: 'Consommation journalière', color: '#FBBF24' }
+                        title: { display: false } /* Removed Chart.js title as HTML title is used */
                     }
                 }
             });
@@ -833,15 +849,15 @@
                     maintainAspectRatio: false,
                     scales: {
                         y: { 
-                            min: -1, 
-                            ticks: { color: '#d1d5db' }, 
-                            grid: { color: '#4B5563' } 
+                            min: -1,
+                            ticks: { color: '#d1d5db' },
+                            grid: { color: '#4B5563' }
                         },
-                        x: { ticks: { color: '#d1d5db' }, grid: { color: '#4B5563' } }
+                        x: { ticks: { color: '#d1d5db', maxTicksLimit: 10, autoSkip: true }, grid: { color: '#4B5563' } }
                     },
                     plugins: {
                         legend: { display: false },
-                        title: { display: true, text: 'Consommation hebdomadaire', color: '#FBBF24' }
+                        title: { display: false } /* Removed Chart.js title as HTML title is used */
                     }
                 }
             });
@@ -851,7 +867,7 @@
             if (monthlyChartInstance) monthlyChartInstance.destroy(); // Destroy previous instance
             const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
             monthlyChartInstance = new Chart(monthlyCtx, {
-                type: 'bar',
+                type: 'line',
                 data: {
                     labels: chartData.monthlyLabels,
                     datasets: [{
@@ -859,7 +875,9 @@
                         data: chartData.monthlyCounts,
                         backgroundColor: 'rgba(59, 130, 246, 0.7)',
                         borderColor: 'rgba(59, 130, 246, 1)',
-                        borderWidth: 1
+                        borderWidth: 2,
+                        fill: false,
+                        tension: 0.1
                     }]
                 },
                 options: {
@@ -871,15 +889,16 @@
                             ticks: { color: '#d1d5db' }, 
                             grid: { color: '#4B5563' } 
                         },
-                        x: { ticks: { color: '#d1d5db' }, grid: { color: '#4B5563' } }
+                        x: { ticks: { color: '#d1d5db', maxTicksLimit: 10, autoSkip: true }, grid: { color: '#4B5563' } }
                     },
                     plugins: {
                         legend: { display: false },
-                        title: { display: true, text: 'Consommation mensuelle', color: '#FBBF24' }
+                        title: { display: false } /* Removed Chart.js title as HTML title is used */
                     }
                 }
             });
         }
+
 
         // Navigation logic
         function showView(viewId) {
@@ -894,12 +913,20 @@
                     button.classList.add('active');
                 }
             });
-            
-            // Render charts only when the trends view is active and data is ready
-            if (viewId === 'trendsView' && chartData.dailyLabels.length > 0) {
+
+            // Render charts only when the trends view is active
+            if (viewId === 'trendsView') {
                 renderDailyChart();
                 renderWeeklyChart();
                 renderMonthlyChart();
+            } else {
+                // Destroy charts when leaving the trends view to free up memory
+                if (dailyChartInstance) dailyChartInstance.destroy();
+                if (weeklyChartInstance) weeklyChartInstance.destroy();
+                if (monthlyChartInstance) monthlyChartInstance.destroy();
+                dailyChartInstance = null;
+                weeklyChartInstance = null;
+                monthlyChartInstance = null;
             }
         }
 
@@ -909,27 +936,14 @@
             });
         });
 
-        // Set today's date as default on load and load records
-        window.addEventListener('load', () => {
-            const today = new Date();
-            const year = today.getFullYear();
-            const month = (today.getMonth() + 1).toString().padStart(2, '0');
-            const day = today.getDate().toString().padStart(2, '0');
-            recordDateInput.value = `${year}-${month}-${day}`;
-            loadRecords(); // This will prepare chart data
+        // Set current date on load
+        recordDateInput.value = new Date().toISOString().split('T')[0];
 
-            // Après le chargement des enregistrements et la définition de la date du jour,
-            // mettre à jour le champ de compte avec la valeur pour cette date (ou 0 si non existante).
-            const initialDate = recordDateInput.value;
-            const existingRecordForInitialDate = records.find(r => r.date === initialDate);
-            cigaretteCountInput.value = existingRecordForInitialDate ? existingRecordForInitialDate.count : 0;
-
-            showView('consumptionView'); // Show consumption view by default
-        });
-
-        mainTitle.addEventListener('click', () => {
-            showView('consumptionView'); // Go back to consumption view when title is clicked
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+        // Initial load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadRecords();
+            // Show consumption view by default on load
+            showView('consumptionView'); 
         });
 
     </script>
