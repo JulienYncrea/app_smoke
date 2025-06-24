@@ -366,8 +366,7 @@
                     <button type="button" id="incrementCount" class="count-button">+</button>
                 </div>
 
-                <button type="submit" id="addUpdateBtn">Ajouter la consommation</button>
-            </form>
+                </form>
         </div>
 
         <div class="container stats-section">
@@ -419,7 +418,7 @@
         const cigaretteForm = document.getElementById('cigaretteForm');
         const recordDateInput = document.getElementById('recordDate');
         const cigaretteCountInput = document.getElementById('cigaretteCount');
-        const addUpdateBtn = document.getElementById('addUpdateBtn');
+        // const addUpdateBtn = document.getElementById('addUpdateBtn'); // Supprimé
         const recordList = document.getElementById('recordList');
         const mainTitle = document.getElementById('mainTitle');
         const incrementButton = document.getElementById('incrementCount');
@@ -436,7 +435,7 @@
         const viewSections = document.querySelectorAll('.view-section');
 
         let records = [];
-        let editingRecordId = null; // Used for editing initiated from the history list
+        // let editingRecordId = null; // Supprimé - plus nécessaire avec l'enregistrement auto par date
 
         // Chart instances
         let dailyChartInstance = null;
@@ -515,6 +514,10 @@
                         records = records.filter(r => r.id !== recordIdToDelete);
                         localStorage.setItem('smokeTrackRecords', JSON.stringify(records));
                         loadRecords(); // Reload to update list, stats, and charts
+                        // If the deleted record was for the currently selected date, reset consumption view
+                        if (recordDateInput.value === recordToDelete.date) {
+                            cigaretteCountInput.value = 0;
+                        }
                     }
                 });
 
@@ -526,8 +529,6 @@
                     if (recordToEdit) {
                         recordDateInput.value = recordToEdit.date;
                         cigaretteCountInput.value = recordToEdit.count;
-                        // addUpdateBtn.textContent = 'Modifier l\'enregistrement ✏️'; // Removed as per request
-                        editingRecordId = recordIdToEdit; // Still track for internal update logic
                         showView('consumptionView'); // Switch to consumption view for editing
                         window.scrollTo({ top: 0, behavior: 'smooth' }); // Scroll to top of the view
                     }
@@ -546,61 +547,77 @@
             return adjustedDate.toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' });
         }
 
-        cigaretteForm.addEventListener('submit', e => {
-            e.preventDefault();
+        // Supprimé : cigaretteForm.addEventListener('submit', ...)
 
+        // Nouvelle fonction pour enregistrer ou mettre à jour la consommation
+        function saveOrUpdateConsumption() {
             const date = recordDateInput.value;
             const count = parseInt(cigaretteCountInput.value, 10);
 
             if (!date) {
-                alert('Veuillez sélectionner une date.');
+                console.error('Date manquante. Impossible d\'enregistrer.');
                 return;
             }
-            if (isNaN(count) || count < 0) { // Allow 0 to enable deletion
-                alert('Veuillez entrer un nombre de cigarettes valide (nombre positif ou zéro).');
+            if (isNaN(count) || count < 0) {
+                console.error('Nombre de cigarettes invalide. Impossible d\'enregistrer.');
                 return;
             }
 
             const existingRecordIndex = records.findIndex(r => r.date === date);
 
             if (count === 0) {
-                // If count is 0, delete the record if it exists
-                if (editingRecordId) { // If editing an existing record from history list
-                    records = records.filter(r => r.id !== editingRecordId);
-                } else if (existingRecordIndex !== -1) { // If a record for this date already exists
+                if (existingRecordIndex !== -1) {
                     records.splice(existingRecordIndex, 1);
                 }
-                // If it's a new submission for count 0 and no existing record, simply do nothing (don't add it).
             } else {
-                // If count is > 0, add or update
-                const newRecord = { date: date, count: count };
-                if (editingRecordId) { // Editing initiated from history list
-                    const recordIndex = records.findIndex(r => r.id === editingRecordId);
-                    if (recordIndex !== -1) {
-                        records[recordIndex] = { ...records[recordIndex], ...newRecord };
-                    }
-                } else if (existingRecordIndex !== -1) { // Record for date already exists, update it
-                    if (confirm(`Un enregistrement existe déjà pour le ${formatDate(date)} avec ${records[existingRecordIndex].count} cigarettes. Voulez-vous le modifier à ${count} ?`)) {
-                         records[existingRecordIndex] = { ...records[existingRecordIndex], ...newRecord };
-                    } else {
-                        return; // User cancelled
-                    }
-                } else { // No existing record for this date, add new
-                    newRecord.id = generateUniqueId();
-                    records.push(newRecord);
+                if (existingRecordIndex !== -1) {
+                    records[existingRecordIndex] = { ...records[existingRecordIndex], count: count };
+                } else {
+                    records.push({ id: generateUniqueId(), date: date, count: count });
                 }
             }
 
             localStorage.setItem('smokeTrackRecords', JSON.stringify(records));
-            cigaretteForm.reset();
-            // Set current date as default for next entry
-            recordDateInput.valueAsDate = new Date(); 
-            // Reset count input to 0 after submission
-            cigaretteCountInput.value = 0; 
-            editingRecordId = null; // Always reset after submission, regardless of edit or new
-            addUpdateBtn.textContent = 'Ajouter la consommation'; // Always reset button text
-            loadRecords(); // Reload to update list, stats, and charts
+            loadRecords(); // Recharge les enregistrements pour mettre à jour la liste, les stats et les graphiques
+        }
+
+        // Écouteurs d'événements pour l'enregistrement automatique
+        incrementButton.addEventListener('click', () => {
+            cigaretteCountInput.value = parseInt(cigaretteCountInput.value, 10) + 1;
+            saveOrUpdateConsumption();
         });
+
+        decrementButton.addEventListener('click', () => {
+            const currentCount = parseInt(cigaretteCountInput.value, 10);
+            if (currentCount > 0) {
+                cigaretteCountInput.value = currentCount - 1;
+            }
+            saveOrUpdateConsumption(); // Appeler même si le compte est déjà 0 pour gérer la suppression
+        });
+
+        cigaretteCountInput.addEventListener('input', () => {
+             // S'assurer que la valeur est un nombre valide avant de sauvegarder
+            const value = cigaretteCountInput.value;
+            if (value === '' || value === null) {
+                // L'utilisateur a effacé le champ, on peut considérer comme 0 pour suppression ou vide
+                // Plutôt que de mettre 0, on va laisser l'utilisateur finaliser sa saisie.
+                // saveOrUpdateConsumption() sera appelée si une valeur numérique est finalement saisie
+                return; 
+            }
+            const count = parseInt(value, 10);
+            if (!isNaN(count) && count >= 0) {
+                 saveOrUpdateConsumption();
+            }
+        });
+
+        recordDateInput.addEventListener('change', () => {
+            const selectedDate = recordDateInput.value;
+            const existingRecord = records.find(r => r.date === selectedDate);
+            cigaretteCountInput.value = existingRecord ? existingRecord.count : 0;
+            // Pas d'appel à saveOrUpdateConsumption ici. La valeur est juste chargée.
+            // L'utilisateur devra interagir avec le champ count ou les boutons pour déclencher la sauvegarde.
+        });
+
 
         function updateStatistics() {
             const now = new Date();
@@ -865,7 +882,13 @@
             const day = today.getDate().toString().padStart(2, '0');
             recordDateInput.value = `${year}-${month}-${day}`;
             loadRecords(); // This will prepare chart data
-            recordDateInput.dispatchEvent(new Event('change')); // Manually trigger change event for initial population
+
+            // Après le chargement des enregistrements et la définition de la date du jour,
+            // mettre à jour le champ de compte avec la valeur pour cette date (ou 0 si non existante).
+            const initialDate = recordDateInput.value;
+            const existingRecordForInitialDate = records.find(r => r.date === initialDate);
+            cigaretteCountInput.value = existingRecordForInitialDate ? existingRecordForInitialDate.count : 0;
+
             showView('consumptionView'); // Show consumption view by default
         });
 
