@@ -310,11 +310,24 @@
             .stats-section {
                 grid-template-columns: 1fr;
             }
+            /* Stats cards smaller on mobile */
+            .stat-card {
+                padding: 0.7rem; /* Réduire le padding */
+            }
+            .stat-card h3 {
+                font-size: 1em; /* Réduire la taille de la police */
+            }
+            .stat-card p {
+                font-size: 1.5em; /* Réduire la taille de la police */
+            }
+
             .count-input-group {
-                flex-wrap: wrap; /* Allow buttons and input to wrap on smaller screens */
+                flex-wrap: nowrap; /* Empêche le retour à la ligne des boutons */
+                /* width: auto; ou flex-grow: 1; pour l'input devrait suffire avec nowrap */
             }
             .count-input-group input[type="number"] {
-                width: calc(100% - 90px); /* Adjust width to fit buttons */
+                /* On enlève cette règle car flex-grow: 1; est plus flexible avec nowrap */
+                width: auto; 
             }
             .nav-buttons-container {
                 /* Supprimez : flex-direction: column; */
@@ -395,6 +408,10 @@
                 <h3>Total ce mois</h3>
                 <p id="totalThisMonth">0</p>
             </div>
+            <div class="stat-card">
+                <h3>Total général</h3>
+                <p id="totalCigarettesSmoked">0</p>
+            </div>
         </div>
     </div>
 
@@ -437,6 +454,7 @@
         const totalTodayElement = document.getElementById('totalToday');
         const totalThisWeekElement = document.getElementById('totalThisWeek');
         const totalThisMonthElement = document.getElementById('totalThisMonth');
+        const totalCigarettesSmokedElement = document.getElementById('totalCigarettesSmoked'); // Nouveau : total général
 
         // Navigation elements
         const navButtons = document.querySelectorAll('.nav-button');
@@ -628,11 +646,15 @@
             let totalToday = 0;
             let totalThisWeek = 0;
             let totalThisMonth = 0;
+            let grandTotal = 0; // Nouveau : total général
             let last7DaysCounts = [];
 
             records.forEach(record => {
                 const recordDate = new Date(record.date);
                 recordDate.setHours(0, 0, 0, 0);
+
+                // Total général
+                grandTotal += record.count;
 
                 // Total Today
                 if (recordDate.toDateString() === now.toDateString()) {
@@ -690,6 +712,7 @@
             totalTodayElement.textContent = totalToday;
             totalThisWeekElement.textContent = totalThisWeek;
             totalThisMonthElement.textContent = totalThisMonth;
+            totalCigarettesSmokedElement.textContent = grandTotal; // Mettre à jour le total général
         }
 
         // NEW: Prepare chart data, but don't render charts yet
@@ -776,7 +799,7 @@
                     maintainAspectRatio: false,
                     scales: {
                         y: { 
-                            min: -1, // Changé pour commencer à -1
+                            min: -1, 
                             ticks: { color: '#d1d5db' }, 
                             grid: { color: '#4B5563' } 
                         },
@@ -812,7 +835,7 @@
                     maintainAspectRatio: false,
                     scales: {
                         y: { 
-                            min: -1, // Changé pour commencer à -1
+                            min: -1, 
                             ticks: { color: '#d1d5db' }, 
                             grid: { color: '#4B5563' } 
                         },
@@ -846,7 +869,7 @@
                     maintainAspectRatio: false,
                     scales: {
                         y: { 
-                            min: -1, // Changé pour commencer à -1
+                            min: -1, 
                             ticks: { color: '#d1d5db' }, 
                             grid: { color: '#4B5563' } 
                         },
