@@ -326,7 +326,6 @@
             border-radius: 0.5rem;
             cursor: pointer;
             font-size: 1em;
-            transition: background-color 0.3s ease;
             width: auto; /* Override default button width */
         }
         .calendar-header button:hover {
@@ -396,13 +395,59 @@
 
 
         @media (max-width: 640px) {
+            body {
+                padding: 0.5rem; /* Réduire le padding du body */
+            }
             .container {
                 padding: 1rem;
                 margin: 0.5rem auto;
             }
+            h1 { /* Reduce title size */
+                font-size: 1.8em;
+            }
+            h2 { /* Reduce section title size */
+                font-size: 1.4em;
+            }
+            h3 { /* Reduce sub-section title size */
+                font-size: 1.1em;
+            }
+            label {
+                font-size: 0.9em;
+            }
+            input[type="date"],
+            input[type="number"],
+            button,
+            select {
+                padding: 0.6rem; /* Slightly less padding for inputs/buttons */
+                font-size: 0.9rem;
+            }
+            button[type="submit"], button.btn-action {
+                font-size: 1rem; /* Slightly smaller button font */
+            }
+
+            .nav-buttons-container {
+                align-items: center;
+                gap: 0.4rem; /* Réduire l'espacement entre les boutons */
+                margin-bottom: 1.5rem; /* Moins de marge en bas */
+            }
+            .nav-button {
+                width: 60px; /* Taille encore plus petite pour les boutons */
+                height: 60px;
+                font-size: 0.6em; /* Texte des boutons encore plus petit */
+                padding: 0.3rem; /* Padding réduit */
+            }
+            .nav-button .icon {
+                font-size: 1.4em; /* Icône légèrement plus petite */
+                margin-bottom: 0.1em;
+            }
+
             .record-item {
                 flex-direction: column;
                 align-items: flex-start;
+                padding: 0.6rem 1rem; /* Réduire padding */
+            }
+            .record-item span {
+                font-size: 0.9em; /* Texte des records plus petit */
             }
             .record-item .date, .record-item .count {
                 flex-basis: 100%;
@@ -412,17 +457,25 @@
                 margin-left: 0;
                 width: 100%;
                 justify-content: flex-end;
+                gap: 0.3rem; /* Espacement réduit pour les boutons d'action */
             }
+            .btn-action {
+                padding: 0.3rem 0.6rem; /* Padding réduit pour les boutons d'action */
+                font-size: 0.8rem; /* Texte des boutons d'action plus petit */
+            }
+
             /* Stats cards smaller on mobile and 2 columns */
             .stats-section {
                 grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); /* 2 colonnes pour les statistiques */
                 gap: 0.5rem; /* Espacement réduit */
+                margin-top: 1.5rem;
             }
             .stat-card {
                 padding: 0.5rem; /* Réduire le padding encore */
             }
             .stat-card h3 {
                 font-size: 0.9em; /* Texte encore plus petit pour les titres */
+                margin-bottom: 0.3rem;
             }
             .stat-card p {
                 font-size: 1.3em; /* Texte encore plus petit pour les valeurs */
@@ -430,30 +483,51 @@
 
             .count-input-group {
                 flex-wrap: nowrap; /* Empêche le retour à la ligne des boutons */
+                gap: 0.3rem; /* Réduire l'espacement */
             }
             .count-input-group input[type="number"] {
                 width: auto;
+                max-width: 80px; /* Max width for number input */
             }
-            .nav-buttons-container {
-                align-items: center;
-                gap: 0.5rem;
-            }
-            .nav-button {
-                width: 65px;
-                height: 65px;
-                font-size: 0.65em; /* Texte des boutons encore plus petit */
-            }
-            .nav-button .icon {
-                font-size: 1.5em; /* Icône légèrement plus petite */
+            .count-input-group .count-button {
+                width: 35px; /* Boutons de compteur plus petits */
+                height: 35px;
+                font-size: 1.2rem;
             }
 
             /* Calendar responsive */
             .calendar {
-                gap: 3px;
+                gap: 2px; /* Espacement des cellules réduit */
+            }
+            .calendar-header {
+                font-size: 1em; /* Taille du texte d'en-tête du calendrier */
+                margin-bottom: 0.8rem;
+            }
+            .calendar-header button {
+                padding: 0.4rem 0.7rem; /* Padding réduit pour les boutons du calendrier */
+                font-size: 0.9em;
             }
             .day-name, .day-cell {
-                font-size: 0.8em;
+                font-size: 0.75em; /* Texte des jours plus petit */
                 padding: 0.3rem 0;
+                min-height: 35px; /* Hauteur min des cellules réduite */
+            }
+
+            /* Chart containers for smaller height */
+            .chart-container {
+                margin-top: 1.5rem;
+            }
+            #dailyChart, #weeklyChart, #monthlyChart {
+                height: 250px; /* Réduire la hauteur des graphiques */
+                padding: 0.8rem;
+            }
+            .chart-main-title {
+                font-size: 1.4em; /* Titre principal du graphique plus petit */
+                margin-top: 1.5rem;
+            }
+            .chart-container h2 {
+                font-size: 1em; /* Titre sous le graphique plus petit */
+                margin-top: 0.8rem;
             }
         }
     </style>
@@ -986,7 +1060,7 @@
 
             // Loop from userStartDate up to today (inclusive)
             for (let d = new Date(userStartDate); d <= now; d.setDate(d.getDate() + 1)) {
-                const dayISO = formatLocalDateToISOString(d); // Get YYYY-MM-DD for the current day in loop
+                const dayISO = formatLocalDateToISOString(d); // Get Drapeau-MM-DD for the current day in loop
                 const recordForDay = records.find(r => r.date === dayISO);
 
                 if (!recordForDay || recordForDay.count === 0) {
