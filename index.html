@@ -834,6 +834,15 @@
     <div id="snackbar" class="snackbar"></div>
 
     <script>
+        // Service Worker Registration (for PWA functionality)
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('Service Worker enregistré:', reg.scope))
+                    .catch(err => console.error('Erreur SW:', err));
+            });
+        }
+
         const cigaretteForm = document.getElementById('cigaretteForm');
         const recordDateInput = document.getElementById('recordDate');
         const cigaretteCountInput = document.getElementById('cigaretteCount');
@@ -844,7 +853,7 @@
         // New elements for NOW tab
         const addTodayCigaretteBigButton = document.getElementById('addTodayCigaretteBigButton');
         const bigCigaretteCountDisplay = document.getElementById('bigCigaretteCountDisplay');
-
+        const bigButtonText = document.getElementById('bigButtonText'); // Get the text element
 
         // Stats elements
         const totalTodayElement = document.getElementById('totalToday');
@@ -885,13 +894,20 @@
         let dailyBadgesEarned = JSON.parse(localStorage.getItem('dailyBadgesEarned')) || []; // For daily repeatable badges
 
         const badgeDefinitions = [
-            { id: 'first_day_smoke_free', name: 'Premier Jour Libre !', description: 'Vous avez passé 24 heures sans fumer.', type: 'milestone', category: 'longestStreak', threshold: 1, icon: '🌟' },
+            // Removed: { id: 'first_day_smoke_free', name: 'Premier Jour Libre !', description: 'Vous avez passé 24 heures sans fumer.', type: 'milestone', category: 'longestStreak', threshold: 1, icon: '🌟' },
             { id: 'one_week_smoke_free', name: 'Une Semaine sans Fumer !', description: '7 jours consécutifs sans cigarette.', type: 'milestone', category: 'longestStreak', threshold: 7, icon: '✨' },
+            { id: 'two_weeks_smoke_free', name: 'Deux Semaines sans Fumer !', description: '14 jours consécutifs sans cigarette.', type: 'milestone', category: 'longestStreak', threshold: 14, icon: '💫' },
             { id: 'one_month_smoke_free', name: 'Un Mois sans Fumer !', description: '30 jours consécutifs sans cigarette.', type: 'milestone', category: 'longestStreak', threshold: 30, icon: '🏅' },
+            { id: 'two_months_smoke_free', name: 'Deux Mois sans Fumer !', description: '60 jours consécutifs sans cigarette. Excellent !', type: 'milestone', category: 'longestStreak', threshold: 60, icon: '🌿' },
+            { id: 'three_months_smoke_free', name: 'Trois Mois sans Fumer !', description: '90 jours consécutifs sans cigarette. Incroyable !', type: 'milestone', category: 'longestStreak', threshold: 90, icon: '💪' },
             { id: '100_days_smoke_free', name: 'Le Centenaire Sans Fumée !', description: '100 jours consécutifs sans cigarette. Bravo !', type: 'milestone', category: 'longestStreak', threshold: 100, icon: '🏆' },
+            { id: 'six_months_smoke_free', name: 'Six Mois de Liberté !', description: '180 jours consécutifs sans cigarette. Une étape majeure !', type: 'milestone', category: 'longestStreak', threshold: 180, icon: '🎉' },
+            { id: 'one_year_smoke_free', name: 'Un An sans Fumer !', description: '365 jours consécutifs sans cigarette. Félicitations !', type: 'milestone', category: 'longestStreak', threshold: 365, icon: '👑' },
             { id: 'saved_10_euro', name: '10€ Économisés', description: 'Vous avez économisé 10€ en ne fumant pas.', type: 'milestone', category: 'savedMoney', threshold: 10, icon: '💰' },
             { id: 'saved_50_euro', name: '50€ Économisés', description: 'Vous avez économisé 50€ !', type: 'milestone', category: 'savedMoney', threshold: 50, icon: '💸' },
             { id: 'saved_100_euro', name: '100€ Économisés !', description: 'C\'est 100€ de plus dans votre poche !', type: 'milestone', category: 'savedMoney', threshold: 100, icon: '💎' },
+            { id: 'saved_250_euro', name: '250€ Économisés !', description: 'Un quart de mille euros économisés.', type: 'milestone', category: 'savedMoney', threshold: 250, icon: '🌟💰' },
+            { id: 'saved_500_euro', name: '500€ Économisés !', description: 'Un demi-millier d\'euros économisés !', type: 'milestone', category: 'savedMoney', threshold: 500, icon: '✨💸' },
             { id: 'daily_smoke_free', name: 'Journée sans cigarette', description: 'Vous avez passé la journée sans fumer.', type: 'daily', icon: '✅' }, // NEW Daily badge
         ];
 
@@ -967,8 +983,12 @@
             // Sort records by date descending
             records.sort((a, b) => parseISODateStringToLocalDate(b.date) - parseISODateStringToLocalDate(a.date));
 
-            // Load daily badges
-            dailyBadgesEarned = JSON.parse(localStorage.getItem('dailyBadgesEarned')) || [];
+            // Reload daily badges and re-evaluate them from all records
+            dailyBadgesEarned = []; // Reset
+            records.forEach(record => {
+                updateDailyBadgeStatus(record.date, record.count);
+            });
+            localStorage.setItem('dailyBadgesEarned', JSON.stringify(dailyBadgesEarned)); // Save updated daily badges
 
 
             updateStatistics();
@@ -978,8 +998,6 @@
             updateConsumptionViewForSelectedDate(); // Update consumption view with current date's record
             updateBigButtonDisplay(); // Update the display on the NOW button
         }
-
-        // Removed displayRecords() as the record list is removed from the UI.
 
         function formatDate(dateStr) {
             if (!dateStr) return 'N/A';
@@ -1014,6 +1032,7 @@
             }
 
             localStorage.setItem('smokeTrackRecords', JSON.stringify(records));
+            updateDailyBadgeStatus(date, count); // Update daily badge for THIS date immediately
             loadRecords(); // Reload to update list, stats, and charts
             showSnackbar(message);
         }
@@ -1064,6 +1083,7 @@
             }
 
             localStorage.setItem('smokeTrackRecords', JSON.stringify(records));
+            updateDailyBadgeStatus(todayISO, newCount); // Update daily badge for THIS date immediately
             loadRecords(); // Reload to update all stats, history, calendar, and NOW button display
             showSnackbar('Cigarette ajoutée pour aujourd\'hui !');
         });
@@ -1076,10 +1096,10 @@
 
             if (count > 0) {
                 bigCigaretteCountDisplay.textContent = count;
-                document.getElementById('bigButtonText').textContent = 'cigarettes aujourd\'hui';
+                bigButtonText.textContent = 'Ajouter une cigarette'; // Always show 'Ajouter une cigarette'
             } else {
                 bigCigaretteCountDisplay.textContent = ''; // Display nothing if count is 0
-                document.getElementById('bigButtonText').textContent = 'Ajouter une cigarette';
+                bigButtonText.textContent = 'Ajouter une cigarette';
             }
         }
 
@@ -1257,11 +1277,6 @@
             savedTodayElement.textContent = `${savedTodayAmount} €`;
             savedTotalElement.textContent = `${savedTotalAmount} €`;
             savedThisWeekElement.textContent = `${savedThisWeekAmount} €`;
-
-            // Call daily badge update logic
-            const todayRecord = records.find(r => r.date === formatLocalDateToISOString(now));
-            const todayCount = todayRecord ? todayRecord.count : 0;
-            updateDailyBadgeStatus(formatLocalDateToISOString(now), todayCount === 0);
         }
 
         // Handles milestone badges (awarded once)
@@ -1294,25 +1309,23 @@
         }
 
         // Handles daily badges (can be awarded multiple times for different days)
-        function updateDailyBadgeStatus(dateISO, isSmokeFree) {
+        function updateDailyBadgeStatus(dateISO, count) {
             const dailySmokeFreeBadge = badgeDefinitions.find(b => b.id === 'daily_smoke_free');
             if (!dailySmokeFreeBadge) return;
 
             const existingEntryIndex = dailyBadgesEarned.findIndex(entry => entry.date === dateISO && entry.badgeId === dailySmokeFreeBadge.id);
 
-            if (isSmokeFree) {
+            if (count === 0) { // If smoke-free
                 if (existingEntryIndex === -1) { // If not already recorded for this day
                     dailyBadgesEarned.push({ date: dateISO, badgeId: dailySmokeFreeBadge.id, icon: dailySmokeFreeBadge.icon });
-                    localStorage.setItem('dailyBadgesEarned', JSON.stringify(dailyBadgesEarned));
-                    renderCalendar(currentCalendarDate); // Refresh calendar to show badge
                 }
-            } else {
+            } else { // If smoked
                 if (existingEntryIndex !== -1) { // If recorded, but now smoked
                     dailyBadgesEarned.splice(existingEntryIndex, 1);
-                    localStorage.setItem('dailyBadgesEarned', JSON.stringify(dailyBadgesEarned));
-                    renderCalendar(currentCalendarDate); // Refresh calendar to remove badge
                 }
             }
+            localStorage.setItem('dailyBadgesEarned', JSON.stringify(dailyBadgesEarned)); // Always save after modification
+            renderCalendar(currentCalendarDate); // Refresh calendar to show/remove badge
         }
 
 
