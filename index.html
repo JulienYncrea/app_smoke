@@ -145,7 +145,7 @@
             transform: translateY(0);
         }
 
-        /* NEW: Big Red Button for NOW tab */
+        /* Big Red Button for NOW tab */
         #addTodayCigaretteBigButton {
             display: flex;
             flex-direction: column;
@@ -397,6 +397,7 @@
             color: #f9fafb;
             min-height: 40px;
             display: flex;
+            flex-direction: column; /* Allow content to stack */
             align-items: center;
             justify-content: center;
             cursor: pointer;
@@ -415,6 +416,10 @@
         }
         .day-cell.today {
             border: 2px solid #FBBF24; /* Jaune pour aujourd'hui */
+        }
+        .day-cell .badge-smiley {
+            font-size: 0.7em; /* Smaller for icon */
+            margin-top: 2px;
         }
 
         /* Toast / Snackbar for feedback */
@@ -703,6 +708,24 @@
             <span id="bigCigaretteCountDisplay"></span>
             <span id="bigButtonText">Ajouter une cigarette</span>
         </button>
+    </div>
+
+
+    <div id="consumptionView" class="view-section">
+        <div class="container">
+            <h2>Enregistrer ou Modifier</h2>
+            <form id="cigaretteForm">
+                <label for="recordDate">Date</label>
+                <input type="date" id="recordDate" required />
+
+                <label for="cigaretteCount">Nombre de cigarettes</label>
+                <div class="count-input-group">
+                    <button type="button" id="decrementCount" class="count-button decrement">-</button>
+                    <input type="number" id="cigaretteCount" min="0" value="0" required />
+                    <button type="button" id="incrementCount" class="count-button">+</button>
+                </div>
+            </form>
+        </div>
         <div class="container stats-section">
             <div class="stat-card">
                 <h3>Total aujourd'hui</h3>
@@ -729,30 +752,7 @@
                 <p id="savedTotal">0.00 €</p>
             </div>
         </div>
-    </div>
-
-
-    <div id="consumptionView" class="view-section">
-        <div class="container">
-            <h2>Enregistrer ou Modifier</h2>
-            <form id="cigaretteForm">
-                <label for="recordDate">Date</label>
-                <input type="date" id="recordDate" required />
-
-                <label for="cigaretteCount">Nombre de cigarettes</label>
-                <div class="count-input-group">
-                    <button type="button" id="decrementCount" class="count-button decrement">-</button>
-                    <input type="number" id="cigaretteCount" min="0" value="0" required />
-                    <button type="button" id="incrementCount" class="count-button">+</button>
-                </div>
-            </form>
         </div>
-        <div class="container">
-            <h2>Historique des consommations</h2>
-            <div id="recordList">
-                </div>
-        </div>
-    </div>
 
     <div id="calendarView" class="view-section">
         <div class="container">
@@ -817,6 +817,9 @@
             </div>
 
             <h3 style="margin-top: 2rem;">Vos badges et objectifs</h3>
+            <p style="text-align: center; color: #d1d5db; font-size: 0.9em; margin-bottom: 1rem;">
+                Les badges de type "Journée sans cigarette" apparaissent directement dans votre calendrier.
+            </p>
             <div id="badgeDisplayArea" class="badges-grid">
                 </div>
 
@@ -834,7 +837,6 @@
         const cigaretteForm = document.getElementById('cigaretteForm');
         const recordDateInput = document.getElementById('recordDate');
         const cigaretteCountInput = document.getElementById('cigaretteCount');
-        const recordList = document.getElementById('recordList'); // Still used for consumption view history
         const mainTitle = document.getElementById('mainTitle');
         const incrementButton = document.getElementById('incrementCount');
         const decrementButton = document.getElementById('decrementCount');
@@ -844,15 +846,14 @@
         const bigCigaretteCountDisplay = document.getElementById('bigCigaretteCountDisplay');
 
 
-        // Stats elements (some moved to NOW view)
-        const avgDailyLast7DaysElement = document.getElementById('avgDailyLast7Days'); // Kept for consumption stats page
-        const totalTodayElement = document.getElementById('totalToday'); // Moved to NOW view
-        const totalThisWeekElement = document.getElementById('totalThisWeek');
-        const totalThisMonthElement = document.getElementById('totalThisMonth');
-        const totalCigarettesSmokedElement = document.getElementById('totalCigarettesSmoked');
-        const dailyGoalStatusElement = document.getElementById('dailyGoalStatus'); // Moved to NOW view
-        const smokeFreeDaysCountElement = document.getElementById('smokeFreeDaysCount'); // Moved to NOW view
-        const longestStreakElement = document.getElementById('longestStreak'); // Moved to NOW view
+        // Stats elements
+        const totalTodayElement = document.getElementById('totalToday');
+        const dailyGoalStatusElement = document.getElementById('dailyGoalStatus');
+        const smokeFreeDaysCountElement = document.getElementById('smokeFreeDaysCount');
+        const longestStreakElement = document.getElementById('longestStreak');
+        const savedTodayElement = document.getElementById('savedToday');
+        const savedTotalElement = document.getElementById('savedTotal');
+        const savedThisWeekElement = document.getElementById('savedThisWeek'); // In settings
 
         // Settings elements
         const dailyGoalInput = document.getElementById('dailyGoalInput');
@@ -862,9 +863,6 @@
         const packPriceInput = document.getElementById('packPrice');
         const cigsPerPackInput = document.getElementById('cigsPerPack');
         const baselineCigarettesPerDayInput = document.getElementById('baselineCigarettesPerDay');
-        const savedTodayElement = document.getElementById('savedToday'); // Moved to NOW view
-        const savedThisWeekElement = document.getElementById('savedThisWeek');
-        const savedTotalElement = document.getElementById('savedTotal'); // Moved to NOW view
 
         // Data management buttons
         const exportDataButton = document.getElementById('exportData');
@@ -884,15 +882,17 @@
         // Badge elements
         const badgeDisplayArea = document.getElementById('badgeDisplayArea');
         let earnedBadges = JSON.parse(localStorage.getItem('earnedBadges')) || [];
+        let dailyBadgesEarned = JSON.parse(localStorage.getItem('dailyBadgesEarned')) || []; // For daily repeatable badges
 
         const badgeDefinitions = [
-            { id: 'first_day_smoke_free', name: 'Premier Jour Libre !', description: 'Vous avez passé 24 heures sans fumer.', type: 'longestStreak', threshold: 1, icon: '🌟' },
-            { id: 'one_week_smoke_free', name: 'Une Semaine sans Fumer !', description: '7 jours consécutifs sans cigarette.', type: 'longestStreak', threshold: 7, icon: '✨' },
-            { id: 'one_month_smoke_free', name: 'Un Mois sans Fumer !', description: '30 jours consécutifs sans cigarette.', type: 'longestStreak', threshold: 30, icon: '🏅' },
-            { id: '100_days_smoke_free', name: 'Le Centenaire Sans Fumée !', description: '100 jours consécutifs sans cigarette. Bravo !', type: 'longestStreak', threshold: 100, icon: '🏆' },
-            { id: 'saved_10_euro', name: '10€ Économisés', description: 'Vous avez économisé 10€ en ne fumant pas.', type: 'savedMoney', threshold: 10, icon: '💰' },
-            { id: 'saved_50_euro', name: '50€ Économisés', description: 'Vous avez économisé 50€ !', type: 'savedMoney', threshold: 50, icon: '💸' },
-            { id: 'saved_100_euro', name: '100€ Économisés !', description: 'C\'est 100€ de plus dans votre poche !', type: 'savedMoney', threshold: 100, icon: '💎' },
+            { id: 'first_day_smoke_free', name: 'Premier Jour Libre !', description: 'Vous avez passé 24 heures sans fumer.', type: 'milestone', category: 'longestStreak', threshold: 1, icon: '🌟' },
+            { id: 'one_week_smoke_free', name: 'Une Semaine sans Fumer !', description: '7 jours consécutifs sans cigarette.', type: 'milestone', category: 'longestStreak', threshold: 7, icon: '✨' },
+            { id: 'one_month_smoke_free', name: 'Un Mois sans Fumer !', description: '30 jours consécutifs sans cigarette.', type: 'milestone', category: 'longestStreak', threshold: 30, icon: '🏅' },
+            { id: '100_days_smoke_free', name: 'Le Centenaire Sans Fumée !', description: '100 jours consécutifs sans cigarette. Bravo !', type: 'milestone', category: 'longestStreak', threshold: 100, icon: '🏆' },
+            { id: 'saved_10_euro', name: '10€ Économisés', description: 'Vous avez économisé 10€ en ne fumant pas.', type: 'milestone', category: 'savedMoney', threshold: 10, icon: '💰' },
+            { id: 'saved_50_euro', name: '50€ Économisés', description: 'Vous avez économisé 50€ !', type: 'milestone', category: 'savedMoney', threshold: 50, icon: '💸' },
+            { id: 'saved_100_euro', name: '100€ Économisés !', description: 'C\'est 100€ de plus dans votre poche !', type: 'milestone', category: 'savedMoney', threshold: 100, icon: '💎' },
+            { id: 'daily_smoke_free', name: 'Journée sans cigarette', description: 'Vous avez passé la journée sans fumer.', type: 'daily', icon: '✅' }, // NEW Daily badge
         ];
 
 
@@ -950,87 +950,36 @@
             records = [];
             let changed = false;
 
-            // Ensure all records have an ID and filter out 0-count records
+            // Ensure all records have an ID and filter out 0-count records if they don't have existing IDs
             storedRecords.forEach(record => {
                 if (!record.id) {
                     record.id = generateUniqueId();
                     changed = true;
                 }
-                if (record.count > 0) { // Only keep records with count > 0
-                    records.push(record);
-                } else {
-                    changed = true; // Mark as changed if a 0-count record was removed
-                }
+                // Keep all records, even with count 0, as they are needed for smoke-free day tracking
+                records.push(record);
             });
 
             if (changed) {
                 localStorage.setItem('smokeTrackRecords', JSON.stringify(records));
             }
 
-            // Sort records by date descending for display
+            // Sort records by date descending
             records.sort((a, b) => parseISODateStringToLocalDate(b.date) - parseISODateStringToLocalDate(a.date));
-            displayRecords(); // Render history in consumption tab
+
+            // Load daily badges
+            dailyBadgesEarned = JSON.parse(localStorage.getItem('dailyBadgesEarned')) || [];
+
+
             updateStatistics();
-            checkAndAwardBadges(); // Check for badges after stats are updated
+            checkAndAwardBadges(); // Check for milestone badges after stats are updated
             prepareChartData(); // Prepare chart data after records are loaded/updated
-            renderCalendar(currentCalendarDate); // Render calendar after records are loaded
+            renderCalendar(currentCalendarDate); // Render calendar after records and daily badges are loaded
             updateConsumptionViewForSelectedDate(); // Update consumption view with current date's record
             updateBigButtonDisplay(); // Update the display on the NOW button
         }
 
-        function displayRecords() {
-            recordList.innerHTML = '';
-            if (records.length === 0) {
-                recordList.innerHTML = '<p style="text-align: center; color: #d1d5db;">Aucune consommation enregistrée pour le moment.</p>';
-                return;
-            }
-
-            records.forEach(record => {
-                const div = document.createElement('div');
-                div.className = 'record-item';
-                div.dataset.id = record.id;
-
-                div.innerHTML = `
-                    <span class="date">${formatDate(record.date)}</span>
-                    <span class="count">${record.count} cigarette(s)</span>
-                    <div class="record-actions">
-                        <button class="btn-action btn-edit" data-id="${record.id}" title="Modifier cet enregistrement">✏️ Modifier</button>
-                        <button class="btn-action btn-delete" data-id="${record.id}" title="Supprimer cet enregistrement">🗑️ Supprimer</button>
-                    </div>
-                `;
-
-                const btnDelete = div.querySelector('.btn-delete');
-                const btnEdit = div.querySelector('.btn-edit');
-
-                btnDelete.addEventListener('click', e => {
-                    e.stopPropagation();
-                    const recordIdToDelete = e.target.dataset.id;
-                    const recordToDelete = records.find(r => r.id === recordIdToDelete);
-                    if (confirm(`Supprimer l'enregistrement du ${formatDate(recordToDelete.date)} (${recordToDelete.count} cigarettes) ?`)) {
-                        records = records.filter(r => r.id !== recordIdToDelete);
-                        localStorage.setItem('smokeTrackRecords', JSON.stringify(records));
-                        loadRecords(); // Reload to update list, stats, and charts
-                        showSnackbar('Enregistrement supprimé.');
-                    }
-                });
-
-                btnEdit.addEventListener('click', e => {
-                    e.stopPropagation();
-                    const recordIdToEdit = e.target.dataset.id;
-                    const recordToEdit = records.find(r => r.id === recordIdToEdit);
-
-                    if (recordToEdit) {
-                        recordDateInput.value = recordToEdit.date;
-                        cigaretteCountInput.value = recordToEdit.count;
-                        showView('consumptionView'); // Switch to consumption view for editing
-                        window.scrollTo({ top: 0, behavior: 'smooth' }); // Scroll to top of the view
-                        showSnackbar('Enregistrement chargé pour modification.');
-                    }
-                });
-
-                recordList.appendChild(div);
-            });
-        }
+        // Removed displayRecords() as the record list is removed from the UI.
 
         function formatDate(dateStr) {
             if (!dateStr) return 'N/A';
@@ -1056,29 +1005,17 @@
             const existingRecordIndex = records.findIndex(r => r.date === date);
             let message = '';
 
-            if (count === 0) {
-                if (existingRecordIndex !== -1) {
-                    records.splice(existingRecordIndex, 1);
-                    message = 'Enregistrement supprimé.';
-                } else {
-                    // No record for this date and count is 0, nothing to do
-                    return;
-                }
+            if (existingRecordIndex !== -1) {
+                records[existingRecordIndex] = { ...records[existingRecordIndex], count: count };
+                message = 'Consommation mise à jour.';
             } else {
-                if (existingRecordIndex !== -1) {
-                    records[existingRecordIndex] = { ...records[existingRecordIndex], count: count };
-                    message = 'Consommation mise à jour.';
-                } else {
-                    records.push({ id: generateUniqueId(), date: date, count: count });
-                    message = 'Consommation ajoutée.';
-                }
+                records.push({ id: generateUniqueId(), date: date, count: count });
+                message = 'Consommation ajoutée.';
             }
 
             localStorage.setItem('smokeTrackRecords', JSON.stringify(records));
             loadRecords(); // Reload to update list, stats, and charts
-            if (count > 0 || (existingRecordIndex !== -1 && count === 0)) {
-                showSnackbar(message);
-            }
+            showSnackbar(message);
         }
 
         // Event listeners for consumption input (standard +- buttons)
@@ -1091,6 +1028,8 @@
             const currentCount = parseInt(cigaretteCountInput.value, 10);
             if (currentCount > 0) {
                 cigaretteCountInput.value = currentCount - 1;
+            } else if (currentCount === 0) {
+                 cigaretteCountInput.value = 0; // Prevent going below 0
             }
             saveOrUpdateConsumption();
         });
@@ -1098,6 +1037,8 @@
         cigaretteCountInput.addEventListener('input', () => {
              const value = cigaretteCountInput.value;
             if (value === '' || value === null || isNaN(parseInt(value, 10))) {
+                // Allow empty string temporarily for user input, don't save.
+                // Or if it's an invalid number (e.g., just "-")
                 return;
             }
             const count = parseInt(value, 10);
@@ -1224,9 +1165,8 @@
 
             let totalToday = 0;
             let totalThisWeek = 0;
-            let totalThisMonth = 0;
-            let grandTotal = 0;
-            let last7DaysCounts = [];
+            let totalThisMonth = 0; // Not currently displayed, but calculated
+            let grandTotal = 0; // Not currently displayed, but calculated
 
             const costPerCigarette = (cigsPerPack > 0) ? (packPrice / cigsPerPack) : 0;
 
@@ -1237,6 +1177,7 @@
             let currentStreak = 0;
             let longestStreak = 0;
 
+            // Calculate smoke-free days and longest streak
             for (let d = new Date(userStartDate); d <= now; d.setDate(d.getDate() + 1)) {
                 const dayISO = formatLocalDateToISOString(d);
                 const recordForDay = records.find(r => r.date === dayISO);
@@ -1249,9 +1190,9 @@
                     currentStreak = 0;
                 }
             }
-            longestStreak = Math.max(longestStreak, currentStreak);
+            longestStreak = Math.max(longestStreak, currentStreak); // Final check for streak ending today
 
-
+            // Calculate total cigarettes not smoked ever
             let totalCigsNotSmokedEver = 0;
             for (let d = new Date(userStartDate); d <= now; d.setDate(d.getDate() + 1)) {
                 const dayISO = formatLocalDateToISOString(d);
@@ -1261,6 +1202,7 @@
             }
 
 
+            // Process records for daily, weekly, monthly totals
             records.forEach(record => {
                 const recordDate = parseISODateStringToLocalDate(record.date);
                 recordDate.setHours(0, 0, 0, 0);
@@ -1272,7 +1214,7 @@
                 }
 
                 const startOfWeek = new Date(now);
-                startOfWeek.setDate(now.getDate() - now.getDay());
+                startOfWeek.setDate(now.getDate() - now.getDay()); // Sunday as first day of week
                 startOfWeek.setHours(0, 0, 0, 0);
 
                 if (recordDate >= startOfWeek && recordDate <= now) {
@@ -1285,42 +1227,15 @@
                 if (recordDate >= startOfMonth && recordDate <= now) {
                     totalThisMonth += record.count;
                 }
-
-                const sevenDaysAgo = new Date(now);
-                sevenDaysAgo.setDate(now.getDate() - 6);
-                sevenDaysAgo.setHours(0, 0, 0, 0);
-
-                if (recordDate >= sevenDaysAgo && recordDate <= now) {
-                    last7DaysCounts.push({ date: recordDate.toDateString(), count: record.count });
-                }
             });
 
-            const dailyTotals = {};
-            last7DaysCounts.forEach(item => {
-                dailyTotals[item.date] = (dailyTotals[item.date] || 0) + item.count;
-            });
-
-            let sumLast7Days = 0;
-            let daysConsideredFor7DayAvg = 0;
-            const firstRecordDate = records.length > 0 ? parseISODateStringToLocalDate(records[records.length - 1].date) : null;
-            for (let i = 0; i < 7; i++) {
-                const date = new Date(now);
-                date.setDate(now.getDate() - i);
-                const dateString = date.toDateString();
-                if (!firstRecordDate || date >= firstRecordDate) {
-                    sumLast7Days += (dailyTotals[dateString] || 0);
-                    daysConsideredFor7DayAvg++;
-                }
-            }
-            const avgDailyLast7Days = daysConsideredFor7DayAvg > 0 ? (sumLast7Days / daysConsideredFor7DayAvg).toFixed(1) : 0;
-
-
+            // Calculate saved amounts
             const savedTodayCigs = Math.max(0, baselineCigarettesPerDay - totalToday);
             const savedTodayAmount = (savedTodayCigs * costPerCigarette).toFixed(2);
 
             let savedThisWeekCigs = 0;
             const startOfWeekForSaved = new Date(now);
-            startOfWeekForSaved.setDate(now.getDate() - now.getDay());
+            startOfWeekForSaved.setDate(now.getDate() - now.getDay()); // Sunday as first day of week
             startOfWeekForSaved.setHours(0,0,0,0);
 
             for (let d = new Date(startOfWeekForSaved); d <= now; d.setDate(d.getDate() + 1)) {
@@ -1330,12 +1245,10 @@
             }
             const savedThisWeekAmount = (savedThisWeekCigs * costPerCigarette).toFixed(2);
 
-
             const savedTotalAmount = (totalCigsNotSmokedEver * costPerCigarette).toFixed(2);
 
 
-            // Update elements (some shared, some specific to NOW/Consumption/Settings)
-            // NOW View Stats
+            // Update elements
             totalTodayElement.textContent = totalToday;
             dailyGoalStatusElement.textContent = `${totalToday} / ${dailyGoal} ${totalToday <= dailyGoal ? '✔️' : '❌'}`;
             dailyGoalStatusElement.style.color = totalToday <= dailyGoal ? '#4CAF50' : '#ef4444';
@@ -1343,26 +1256,26 @@
             longestStreakElement.textContent = `${longestStreak} jours`;
             savedTodayElement.textContent = `${savedTodayAmount} €`;
             savedTotalElement.textContent = `${savedTotalAmount} €`;
-
-            // Consumption View Stats (if any still there, avg daily is the main one)
-            // avgDailyLast7DaysElement.textContent = avgDailyLast7Days; // Currently not displayed in consumption view
-
-            // Settings View Stats
             savedThisWeekElement.textContent = `${savedThisWeekAmount} €`;
 
+            // Call daily badge update logic
+            const todayRecord = records.find(r => r.date === formatLocalDateToISOString(now));
+            const todayCount = todayRecord ? todayRecord.count : 0;
+            updateDailyBadgeStatus(formatLocalDateToISOString(now), todayCount === 0);
         }
 
+        // Handles milestone badges (awarded once)
         function checkAndAwardBadges() {
             let newBadgesEarned = false;
             const currentSavedTotal = parseFloat(savedTotalElement.textContent.replace(' €', '')) || 0;
             const currentLongestStreak = parseInt(longestStreakElement.textContent.replace(' jours', '')) || 0;
 
-            badgeDefinitions.forEach(badge => {
-                if (!earnedBadges.some(b => b.id === badge.id)) {
+            badgeDefinitions.filter(b => b.type === 'milestone').forEach(badge => {
+                if (!earnedBadges.some(b => b.id === badge.id)) { // Check if not already earned
                     let conditionMet = false;
-                    if (badge.type === 'longestStreak' && currentLongestStreak >= badge.threshold) {
+                    if (badge.category === 'longestStreak' && currentLongestStreak >= badge.threshold) {
                         conditionMet = true;
-                    } else if (badge.type === 'savedMoney' && currentSavedTotal >= badge.threshold) {
+                    } else if (badge.category === 'savedMoney' && currentSavedTotal >= badge.threshold) {
                         conditionMet = true;
                     }
 
@@ -1380,13 +1293,38 @@
             }
         }
 
+        // Handles daily badges (can be awarded multiple times for different days)
+        function updateDailyBadgeStatus(dateISO, isSmokeFree) {
+            const dailySmokeFreeBadge = badgeDefinitions.find(b => b.id === 'daily_smoke_free');
+            if (!dailySmokeFreeBadge) return;
+
+            const existingEntryIndex = dailyBadgesEarned.findIndex(entry => entry.date === dateISO && entry.badgeId === dailySmokeFreeBadge.id);
+
+            if (isSmokeFree) {
+                if (existingEntryIndex === -1) { // If not already recorded for this day
+                    dailyBadgesEarned.push({ date: dateISO, badgeId: dailySmokeFreeBadge.id, icon: dailySmokeFreeBadge.icon });
+                    localStorage.setItem('dailyBadgesEarned', JSON.stringify(dailyBadgesEarned));
+                    renderCalendar(currentCalendarDate); // Refresh calendar to show badge
+                }
+            } else {
+                if (existingEntryIndex !== -1) { // If recorded, but now smoked
+                    dailyBadgesEarned.splice(existingEntryIndex, 1);
+                    localStorage.setItem('dailyBadgesEarned', JSON.stringify(dailyBadgesEarned));
+                    renderCalendar(currentCalendarDate); // Refresh calendar to remove badge
+                }
+            }
+        }
+
+
         function displayBadges() {
             badgeDisplayArea.innerHTML = '';
             const currentSavedTotal = parseFloat(savedTotalElement.textContent.replace(' €', '')) || 0;
             const currentLongestStreak = parseInt(longestStreakElement.textContent.replace(' jours', '')) || 0;
 
-            if (badgeDefinitions.length === 0) {
-                badgeDisplayArea.innerHTML = '<p style="text-align: center; color: #d1d5db;">Aucun badge défini.</p>';
+            const milestoneBadges = badgeDefinitions.filter(b => b.type === 'milestone');
+
+            if (milestoneBadges.length === 0) {
+                badgeDisplayArea.innerHTML = '<p style="text-align: center; color: #d1d5db;">Aucun badge jalon défini.</p>';
                 return;
             }
 
@@ -1394,30 +1332,34 @@
             const sortedEarnedBadges = [...earnedBadges].sort((a, b) => a.timestamp - b.timestamp);
             const earnedBadgeIds = new Set(sortedEarnedBadges.map(b => b.id));
 
-            // Display earned badges first
+            // Display earned milestone badges first
             sortedEarnedBadges.forEach(badgeDef => {
-                const badgeCard = document.createElement('div');
-                badgeCard.className = 'badge-card';
+                // Ensure it's a milestone badge from definitions
+                const originalBadge = milestoneBadges.find(b => b.id === badgeDef.id);
+                if (originalBadge) {
+                    const badgeCard = document.createElement('div');
+                    badgeCard.className = 'badge-card';
 
-                badgeCard.innerHTML = `
-                    <div class="badge-icon">${badgeDef.icon}</div>
-                    <div class="badge-name">${badgeDef.name}</div>
-                    <div class="badge-description">${badgeDef.description}</div>
-                `;
-                badgeDisplayArea.appendChild(badgeCard);
+                    badgeCard.innerHTML = `
+                        <div class="badge-icon">${originalBadge.icon}</div>
+                        <div class="badge-name">${originalBadge.name}</div>
+                        <div class="badge-description">${originalBadge.description}</div>
+                    `;
+                    badgeDisplayArea.appendChild(badgeCard);
+                }
             });
 
-            // Display unearned badges greyed out with progress
-            badgeDefinitions.forEach(badgeDef => {
+            // Display unearned milestone badges greyed out with progress
+            milestoneBadges.forEach(badgeDef => {
                 if (!earnedBadgeIds.has(badgeDef.id)) {
                     const badgeCard = document.createElement('div');
                     badgeCard.className = 'badge-card';
                     let progressText = '';
                     let badgeStyle = 'filter: grayscale(100%) opacity(0.6); -webkit-filter: grayscale(100%) opacity(0.6);';
 
-                    if (badgeDef.type === 'longestStreak') {
+                    if (badgeDef.category === 'longestStreak') {
                         progressText = `Progrès : ${currentLongestStreak} / ${badgeDef.threshold} jours`;
-                    } else if (badgeDef.type === 'savedMoney') {
+                    } else if (badgeDef.category === 'savedMoney') {
                         progressText = `Progrès : ${currentSavedTotal.toFixed(2)} / ${badgeDef.threshold.toFixed(2)} €`;
                     }
 
@@ -1432,13 +1374,7 @@
                     badgeDisplayArea.appendChild(badgeCard);
                 }
             });
-
-            // If no badges are earned and none defined (shouldn't happen with badgeDefinitions), show message
-            if (badgeDefinitions.length === 0 && earnedBadges.length === 0) {
-                badgeDisplayArea.innerHTML = '<p style="text-align: center; color: #d1d5db;">Aucun badge disponible.</p>';
-            }
         }
-
 
 
         function prepareChartData() {
@@ -1660,8 +1596,10 @@
 
             for (let i = 1; i <= daysInMonth; i++) {
                 const dayCell = document.createElement('div');
+                const dayNumSpan = document.createElement('span');
+                dayNumSpan.textContent = i;
+                dayCell.appendChild(dayNumSpan);
                 dayCell.className = 'day-cell';
-                dayCell.textContent = i;
 
                 const currentDay = new Date(year, month, i);
                 currentDay.setHours(0, 0, 0, 0);
@@ -1671,12 +1609,21 @@
 
                 if (recordForDay && recordForDay.count > 0) {
                     dayCell.classList.add('smoked');
-                } else if (currentDay <= today) {
+                } else if (currentDay <= today) { // If it's a past or current date with no smoking
                     dayCell.classList.add('no-smoke');
                 }
 
                 if (currentDay.toDateString() === today.toDateString()) {
                     dayCell.classList.add('today');
+                }
+
+                // Check for daily badges for this date
+                const dailyBadgeEntry = dailyBadgesEarned.find(entry => entry.date === currentDayISO && entry.badgeId === 'daily_smoke_free');
+                if (dailyBadgeEntry) {
+                    const badgeSmileySpan = document.createElement('span');
+                    badgeSmileySpan.className = 'badge-smiley';
+                    badgeSmileySpan.textContent = dailyBadgeEntry.icon;
+                    dayCell.appendChild(badgeSmileySpan);
                 }
 
                 dayCell.addEventListener('click', () => {
@@ -1754,7 +1701,8 @@
                     cigsPerPack: cigsPerPack,
                     baselineCigarettesPerDay: baselineCigarettesPerDay
                 },
-                earnedBadges: earnedBadges
+                earnedBadges: earnedBadges,
+                dailyBadgesEarned: dailyBadgesEarned
             };
             const dataStr = JSON.stringify(data, null, 2);
             const blob = new Blob([dataStr], { type: 'application/json' });
@@ -1798,6 +1746,10 @@
                             earnedBadges = importedData.earnedBadges;
                             localStorage.setItem('earnedBadges', JSON.stringify(earnedBadges));
                         }
+                        if (importedData.dailyBadgesEarned && Array.isArray(importedData.dailyBadgesEarned)) {
+                            dailyBadgesEarned = importedData.dailyBadgesEarned;
+                            localStorage.setItem('dailyBadgesEarned', JSON.stringify(dailyBadgesEarned));
+                        }
 
 
                         loadRecords();
@@ -1824,8 +1776,11 @@
                 localStorage.removeItem('cigsPerPack');
                 localStorage.removeItem('baselineCigarettesPerDay');
                 localStorage.removeItem('earnedBadges');
+                localStorage.removeItem('dailyBadgesEarned'); // Clear daily badges too
+
                 records = [];
                 earnedBadges = [];
+                dailyBadgesEarned = []; // Reset daily badges
                 loadRecords();
                 loadSettings();
                 showSnackbar('Toutes les données ont été effacées.');
