@@ -696,6 +696,22 @@
         let cigsPerPack = parseInt(localStorage.getItem('cigsPerPack')) || 20;
         let baselineCigarettesPerDay = parseInt(localStorage.getItem('baselineCigarettesPerDay')) || 20;
 
+        // --- Helper functions for date handling consistency ---
+        // Parses a 'YYYY-MM-DD' string into a Date object at the start of that day in LOCAL timezone.
+        function parseISODateStringToLocalDate(isoDateString) {
+            const [year, month, day] = isoDateString.split('-').map(Number);
+            return new Date(year, month - 1, day); // Month is 0-indexed
+        }
+
+        // Formats a Date object into a 'YYYY-MM-DD' string using its LOCAL year, month, and day.
+        function formatLocalDateToISOString(date) {
+            const year = date.getFullYear();
+            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+            const day = date.getDate().toString().padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+        // --- End Helper functions ---
+
         function generateUniqueId() {
             return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
         }
@@ -731,7 +747,7 @@
             }
 
             // Sort records by date descending for display
-            records.sort((a, b) => new Date(b.date) - new Date(a.date));
+            records.sort((a, b) => parseISODateStringToLocalDate(b.date) - parseISODateStringToLocalDate(a.date));
             displayRecords();
             updateStatistics();
             prepareChartData(); // Prepare chart data after records are loaded/updated
@@ -795,11 +811,7 @@
 
         function formatDate(dateStr) {
             if (!dateStr) return 'N/A';
-            const d = new Date(dateStr);
-            // Adjust for timezone offset to prevent date shifting for local storage dates
-            // const userTimezoneOffset = d.getTimezoneOffset() * 60000;
-            // const adjustedDate = new Date(d.getTime() + userTimezoneOffset);
-            // Using toLocaleDateString directly might be better here as it respects local timezone for display.
+            const d = parseISODateStringToLocalDate(dateStr); // Use helper to ensure local date interpretation
             return d.toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' });
         }
 
@@ -854,9 +866,12 @@
             const currentCount = parseInt(cigaretteCountInput.value, 10);
             if (currentCount > 0) {
                 cigaretteCountInput.value = currentCount - 1;
+            } else if (currentCount === 0) { // If it's already 0, and they decrement, delete record if exists
+                 // No change needed, but trigger save to remove the 0-count record if exists
             }
             saveOrUpdateConsumption(); // Appeler même si le compte est déjà 0 pour gérer la suppression
         });
+
 
         cigaretteCountInput.addEventListener('input', () => {
              const value = cigaretteCountInput.value;
@@ -949,7 +964,7 @@
             let currentStreak = 0;
             let longestStreak = 0;
 
-            const sortedRecords = [...records].sort((a, b) => new Date(a.date) - new Date(b.date)); // Sort ascending for streak calc
+            const sortedRecords = [...records].sort((a, b) => parseISODateStringToLocalDate(a.date) - parseISODateStringToLocalDate(b.date)); // Sort ascending for streak calc
 
             const costPerCigarette = (cigsPerPack > 0) ? (packPrice / cigsPerPack) : 0;
             let totalCigsNotSmokedEver = 0;
@@ -957,8 +972,7 @@
             // --- Calculations for streaks and total savings from baseline ---
             let previousDayHadRecord = false;
             let currentDateCheck = new Date(now); // Start checking from today backwards
-            let firstRecordDate = sortedRecords.length > 0 ? new Date(sortedRecords[0].date) : null;
-            if (firstRecordDate) firstRecordDate.setHours(0,0,0,0);
+            let firstRecordDate = sortedRecords.length > 0 ? parseISODateStringToLocalDate(sortedRecords[0].date) : null;
 
             // Loop back from today to calculate smoke-free days and longest streak
             // We go back up to 365 days or until before the first record, whichever comes first
@@ -966,7 +980,7 @@
                 const checkDate = new Date(now);
                 checkDate.setDate(now.getDate() - i);
                 checkDate.setHours(0, 0, 0, 0);
-                const checkDateISO = checkDate.toISOString().split('T')[0];
+                const checkDateISO = formatLocalDateToISOString(checkDate); // Use helper for consistency
                 const recordForDay = records.find(r => r.date === checkDateISO);
 
                 if (!recordForDay || recordForDay.count === 0) {
@@ -988,7 +1002,7 @@
 
 
             records.forEach(record => {
-                const recordDate = new Date(record.date);
+                const recordDate = parseISODateStringToLocalDate(record.date); // Use helper
                 recordDate.setHours(0, 0, 0, 0);
 
                 // Total général
@@ -1060,7 +1074,7 @@
             startOfWeek.setHours(0,0,0,0);
 
             for (let d = new Date(startOfWeek); d <= now; d.setDate(d.getDate() + 1)) {
-                const dayISO = d.toISOString().split('T')[0];
+                const dayISO = formatLocalDateToISOString(d); // Use helper for consistency
                 const recordForDay = records.find(r => r.date === dayISO);
                 savedThisWeekCigs += Math.max(0, baselineCigarettesPerDay - (recordForDay ? recordForDay.count : 0));
             }
@@ -1101,15 +1115,15 @@
             const monthlyData = {};
 
             records.forEach(record => {
-                const date = new Date(record.date);
+                const date = parseISODateStringToLocalDate(record.date); // Use helper
                 date.setHours(0, 0, 0, 0);
 
-                const dayKey = date.toISOString().split('T')[0];
+                const dayKey = formatLocalDateToISOString(date); // Use helper
                 dailyData[dayKey] = (dailyData[dayKey] || 0) + record.count;
 
                 const startOfWeek = new Date(date);
                 startOfWeek.setDate(date.getDate() - date.getDay());
-                const weekKey = startOfWeek.toISOString().split('T')[0];
+                const weekKey = formatLocalDateToISOString(startOfWeek); // Use helper
                 weeklyData[weekKey] = (weeklyData[weekKey] || 0) + record.count;
 
                 const monthKey = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
@@ -1125,7 +1139,7 @@
             for (let i = limitDays - 1; i >= 0; i--) {
                 const d = new Date(today);
                 d.setDate(today.getDate() - i);
-                const dateKey = d.toISOString().split('T')[0];
+                const dateKey = formatLocalDateToISOString(d); // Use helper
                 const displayDate = formatDate(dateKey).replace(` ${d.getFullYear()}`, '');
 
                 dailyChartLabels.push(displayDate);
@@ -1134,10 +1148,10 @@
 
             const sortedWeeklyLabels = Object.keys(weeklyData).sort();
             const readableWeeklyLabels = sortedWeeklyLabels.map(d => {
-                const startDate = new Date(d);
+                const startDate = parseISODateStringToLocalDate(d); // Use helper
                 const endDate = new Date(startDate);
                 endDate.setDate(startDate.getDate() + 6);
-                return `${formatDate(startDate.toISOString().split('T')[0]).slice(0, -5)} - ${formatDate(endDate.toISOString().split('T')[0]).slice(0, -5)}`;
+                return `${formatDate(formatLocalDateToISOString(startDate)).slice(0, -5)} - ${formatDate(formatLocalDateToISOString(endDate)).slice(0, -5)}`; // Use helper for consistency
             });
             const sortedWeeklyCounts = sortedWeeklyLabels.map(label => weeklyData[label]);
 
@@ -1322,7 +1336,7 @@
 
                 const currentDay = new Date(year, month, i);
                 currentDay.setHours(0, 0, 0, 0);
-                const currentDayISO = currentDay.toISOString().split('T')[0];
+                const currentDayISO = formatLocalDateToISOString(currentDay); // Use helper for consistency
 
                 const recordForDay = records.find(r => r.date === currentDayISO);
 
@@ -1474,7 +1488,7 @@
 
 
         // Set current date on load
-        recordDateInput.value = new Date().toISOString().split('T')[0];
+        recordDateInput.value = formatLocalDateToISOString(new Date()); // Use helper for consistency
 
         // Initial load
         document.addEventListener('DOMContentLoaded', () => {
