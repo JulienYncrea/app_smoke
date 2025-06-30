@@ -706,7 +706,7 @@
     <div id="nowView" class="view-section active">
         <button id="addTodayCigaretteBigButton">
             <span id="bigCigaretteCountDisplay"></span>
-            <span id="bigButtonText">Ajouter une cigarette</span>
+            <span id="bigButtonText"></span>
         </button>
     </div>
 
@@ -1096,10 +1096,10 @@
 
             if (count > 0) {
                 bigCigaretteCountDisplay.textContent = count;
-                bigButtonText.textContent = 'Ajouter une cigarette'; // Always show 'Ajouter une cigarette'
+                bigButtonText.textContent = ''; // Empty string as requested
             } else {
                 bigCigaretteCountDisplay.textContent = ''; // Display nothing if count is 0
-                bigButtonText.textContent = 'Ajouter une cigarette';
+                bigButtonText.textContent = ''; // Empty string as requested
             }
         }
 
