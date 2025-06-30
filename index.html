@@ -144,6 +144,36 @@
             transform: translateY(0);
         }
 
+        /* Styles for the new "Add Cigarette" button */
+        #addTodayCigaretteButton {
+            display: block;
+            width: 90%;
+            max-width: 300px; /* Limit width on larger screens */
+            padding: 1rem;
+            margin: 1.5rem auto 2rem auto; /* Center and add more vertical spacing */
+            background: #ef4444; /* Rouge vif */
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 0.75rem;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            text-align: center;
+        }
+
+        #addTodayCigaretteButton:hover {
+            background: #dc2626;
+            transform: translateY(-2px);
+        }
+
+        #addTodayCigaretteButton:active {
+            transform: translateY(0);
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+
         .record-item {
             background: #111827;
             padding: 0.8rem 1.2rem;
@@ -393,6 +423,35 @@
             transition: opacity 0.5s;
         }
 
+        /* Badges Grid Styles */
+        .badges-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        .badge-card {
+            background: #1e293b; /* Slightly darker than container */
+            padding: 0.8rem;
+            border-radius: 0.5rem;
+            text-align: center;
+            border: 1px solid #4CAF50; /* Green border */
+        }
+        .badge-card .badge-icon {
+            font-size: 2em;
+            margin-bottom: 0.2rem;
+        }
+        .badge-card .badge-name {
+            font-weight: bold;
+            color: #FBBF24;
+            font-size: 0.9em;
+        }
+        .badge-card .badge-description {
+            font-size: 0.75em;
+            color: #cbd5e1;
+            margin-top: 0.2rem;
+        }
+
 
         @media (max-width: 640px) {
             body {
@@ -423,6 +482,13 @@
             }
             button[type="submit"], button.btn-action {
                 font-size: 1rem; /* Slightly smaller button font */
+            }
+
+            #addTodayCigaretteButton {
+                width: 100%; /* Take full width on mobile */
+                padding: 0.8rem;
+                font-size: 1.2rem;
+                margin: 1rem auto 1.5rem auto; /* Adjust margin */
             }
 
             .nav-buttons-container {
@@ -529,6 +595,24 @@
                 font-size: 1em; /* Titre sous le graphique plus petit */
                 margin-top: 0.8rem;
             }
+
+            /* Badges Grid Styles for Mobile */
+            .badges-grid {
+                grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); /* Smaller grid for mobile */
+                gap: 0.5rem;
+            }
+            .badge-card {
+                padding: 0.6rem;
+            }
+            .badge-card .badge-icon {
+                font-size: 1.5em;
+            }
+            .badge-card .badge-name {
+                font-size: 0.8em;
+            }
+            .badge-card .badge-description {
+                font-size: 0.65em;
+            }
         }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -570,6 +654,8 @@
     </div>
 
     <div id="consumptionView" class="view-section active">
+        <button id="addTodayCigaretteButton">Ajouter une cigarette aujourd'hui</button>
+
         <div class="container">
             <h2>Add your consumption</h2>
             <form id="cigaretteForm">
@@ -699,6 +785,10 @@
                 </div>
             </div>
 
+            <h3 style="margin-top: 2rem;">Vos badges</h3>
+            <div id="badgeDisplayArea" class="badges-grid">
+                </div>
+
             <h3 style="margin-top: 2rem;">Gestion des données</h3>
             <button class="btn-action" id="exportData" style="background: #3b82f6;">Exporter les données</button>
             <input type="file" id="importData" accept=".json" style="display: none; margin-top: 1rem;" />
@@ -717,6 +807,7 @@
         const mainTitle = document.getElementById('mainTitle');
         const incrementButton = document.getElementById('incrementCount');
         const decrementButton = document.getElementById('decrementCount');
+        const addTodayCigaretteButton = document.getElementById('addTodayCigaretteButton'); // New button reference
 
         // Stats elements
         const avgDailyLast7DaysElement = document.getElementById('avgDailyLast7Days');
@@ -754,6 +845,21 @@
         // Calendar elements
         const calendarContainer = document.getElementById('calendarContainer');
         let currentCalendarDate = new Date(); // To keep track of the month displayed in the calendar
+
+        // Badge elements
+        const badgeDisplayArea = document.getElementById('badgeDisplayArea');
+        let earnedBadges = JSON.parse(localStorage.getItem('earnedBadges')) || [];
+
+        const badgeDefinitions = [
+            { id: 'first_day_smoke_free', name: 'Premier Jour Libre !', description: 'Vous avez passé 24 heures sans fumer.', type: 'longestStreak', threshold: 1, icon: '🌟' },
+            { id: 'one_week_smoke_free', name: 'Une Semaine sans Fumer !', description: '7 jours consécutifs sans cigarette.', type: 'longestStreak', threshold: 7, icon: '✨' },
+            { id: 'one_month_smoke_free', name: 'Un Mois sans Fumer !', description: '30 jours consécutifs sans cigarette.', type: 'longestStreak', threshold: 30, icon: '🏅' },
+            { id: '100_days_smoke_free', name: 'Le Centenaire Sans Fumée !', description: '100 jours consécutifs sans cigarette. Bravo !', type: 'longestStreak', threshold: 100, icon: '🏆' },
+            { id: 'saved_10_euro', name: '10€ Économisés', description: 'Vous avez économisé 10€ en ne fumant pas.', type: 'savedMoney', threshold: 10, icon: '💰' },
+            { id: 'saved_50_euro', name: '50€ Économisés', description: 'Vous avez économisé 50€ !', type: 'savedMoney', threshold: 50, icon: '💸' },
+            { id: 'saved_100_euro', name: '100€ Économisés !', description: 'C\'est 100€ de plus dans votre poche !', type: 'savedMoney', threshold: 100, icon: '💎' },
+        ];
+
 
         let records = [];
 
@@ -830,6 +936,7 @@
             records.sort((a, b) => parseISODateStringToLocalDate(b.date) - parseISODateStringToLocalDate(a.date));
             displayRecords();
             updateStatistics();
+            checkAndAwardBadges(); // Check for badges after stats are updated
             prepareChartData(); // Prepare chart data after records are loaded/updated
             renderCalendar(currentCalendarDate); // Render calendar after records are loaded
             updateConsumptionViewForSelectedDate(); // Update consumption view with current date's record
@@ -933,7 +1040,9 @@
 
             localStorage.setItem('smokeTrackRecords', JSON.stringify(records));
             loadRecords(); // Reload to update list, stats, and charts
-            showSnackbar(message);
+            if (count > 0 || (existingRecordIndex !== -1 && count === 0)) { // Only show snackbar if an action truly occurred
+                showSnackbar(message);
+            }
         }
 
         // Écouteurs d'événements pour l'enregistrement automatique
@@ -946,8 +1055,8 @@
             const currentCount = parseInt(cigaretteCountInput.value, 10);
             if (currentCount > 0) {
                 cigaretteCountInput.value = currentCount - 1;
-            } else if (currentCount === 0) { // If it's already 0, and they decrement, delete record if exists
-                 // No change needed, but trigger save to remove the 0-count record if exists
+            } else if (currentCount === 0) {
+                 // If it's already 0, and they decrement, trigger save to remove the 0-count record if exists
             }
             saveOrUpdateConsumption(); // Appeler même si le compte est déjà 0 pour gérer la suppression
         });
@@ -964,6 +1073,21 @@
                 saveOrUpdateConsumption();
             }
         });
+
+        // New "Add Cigarette Today" button logic
+        addTodayCigaretteButton.addEventListener('click', () => {
+            const todayISO = formatLocalDateToISOString(new Date());
+            const existingRecord = records.find(r => r.date === todayISO);
+            const currentCount = existingRecord ? existingRecord.count : 0;
+            
+            // Set the date input to today
+            recordDateInput.value = todayISO;
+            // Increment the count and save
+            cigaretteCountInput.value = currentCount + 1;
+            saveOrUpdateConsumption();
+            showSnackbar('Cigarette ajoutée pour aujourd\'hui !');
+        });
+
 
         function updateConsumptionViewForSelectedDate() {
             const selectedDate = recordDateInput.value;
@@ -1058,7 +1182,7 @@
             let currentStreak = 0;
             let longestStreak = 0;
 
-            // Loop from userStartDate up to today (inclusive)
+            // Loop from userStartDate up to today (inclusive) to calculate streak and smokeFreeDays
             for (let d = new Date(userStartDate); d <= now; d.setDate(d.getDate() + 1)) {
                 const dayISO = formatLocalDateToISOString(d); // Get Drapeau-MM-DD for the current day in loop
                 const recordForDay = records.find(r => r.date === dayISO);
@@ -1192,6 +1316,57 @@
             savedThisWeekElement.textContent = `${savedThisWeekAmount} €`;
             savedTotalElement.textContent = `${savedTotalAmount} €`;
         }
+
+        function checkAndAwardBadges() {
+            let newBadgesEarned = false;
+            const currentSavedTotal = parseFloat(savedTotalElement.textContent.replace(' €', '')) || 0;
+            const currentLongestStreak = parseInt(longestStreakElement.textContent.replace(' jours', '')) || 0;
+
+            badgeDefinitions.forEach(badge => {
+                if (!earnedBadges.some(b => b.id === badge.id)) { // If badge not already earned
+                    let conditionMet = false;
+                    if (badge.type === 'longestStreak' && currentLongestStreak >= badge.threshold) {
+                        conditionMet = true;
+                    } else if (badge.type === 'savedMoney' && currentSavedTotal >= badge.threshold) {
+                        conditionMet = true;
+                    }
+
+                    if (conditionMet) {
+                        earnedBadges.push({ id: badge.id, name: badge.name, description: badge.description, icon: badge.icon, timestamp: Date.now() });
+                        newBadgesEarned = true;
+                        showSnackbar(`Badge débloqué : ${badge.name}! ${badge.icon}`);
+                    }
+                }
+            });
+
+            if (newBadgesEarned) {
+                localStorage.setItem('earnedBadges', JSON.stringify(earnedBadges));
+                displayBadges(); // Re-render badges if new ones are earned
+            }
+        }
+
+        function displayBadges() {
+            badgeDisplayArea.innerHTML = ''; // Clear previous badges
+            if (earnedBadges.length === 0) {
+                badgeDisplayArea.innerHTML = '<p style="text-align: center; color: #d1d5db;">Aucun badge débloqué pour le moment.</p>';
+                return;
+            }
+
+            // Sort badges by their timestamp (when they were earned)
+            earnedBadges.sort((a, b) => a.timestamp - b.timestamp);
+
+            earnedBadges.forEach(badge => {
+                const badgeCard = document.createElement('div');
+                badgeCard.className = 'badge-card';
+                badgeCard.innerHTML = `
+                    <div class="badge-icon">${badge.icon}</div>
+                    <div class="badge-name">${badge.name}</div>
+                    <div class="badge-description">${badge.description}</div>
+                `;
+                badgeDisplayArea.appendChild(badgeCard);
+            });
+        }
+
 
         function prepareChartData() {
             const dailyData = {};
@@ -1481,6 +1656,7 @@
 
             if (viewId === 'settingsView') {
                 loadSettings(); // Ensure settings fields are populated
+                displayBadges(); // Display badges when settings view is active
             }
         }
 
@@ -1500,7 +1676,8 @@
                     packPrice: packPrice,
                     cigsPerPack: cigsPerPack,
                     baselineCigarettesPerDay: baselineCigarettesPerDay
-                }
+                },
+                earnedBadges: earnedBadges // Include earned badges in export
             };
             const dataStr = JSON.stringify(data, null, 2);
             const blob = new Blob([dataStr], { type: 'application/json' });
@@ -1542,6 +1719,11 @@
                             localStorage.setItem('baselineCigarettesPerDay', importedData.settings.baselineCigarettesPerDay || 20);
                             loadSettings(); // Reload settings display
                         }
+                        if (importedData.earnedBadges && Array.isArray(importedData.earnedBadges)) {
+                            earnedBadges = importedData.earnedBadges;
+                            localStorage.setItem('earnedBadges', JSON.stringify(earnedBadges));
+                        }
+
 
                         loadRecords(); // Reload everything based on new data
                         showSnackbar('Données importées avec succès.');
@@ -1566,7 +1748,9 @@
                 localStorage.removeItem('packPrice');
                 localStorage.removeItem('cigsPerPack');
                 localStorage.removeItem('baselineCigarettesPerDay');
+                localStorage.removeItem('earnedBadges'); // Clear earned badges
                 records = []; // Clear current records array
+                earnedBadges = []; // Clear earned badges array
                 loadRecords(); // Reinitialize everything
                 loadSettings(); // Reinitialize settings
                 showSnackbar('Toutes les données ont été effacées.');
