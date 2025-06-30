@@ -12,7 +12,7 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 1rem;
-            background: #000000; /* Fond noir comme demandé */
+            background: #000000; /* Fond noir */
             color: #f9fafb;
             line-height: 1.6;
         }
@@ -41,6 +41,7 @@
             justify-content: center;
             gap: 1rem;
             margin-bottom: 2rem;
+            flex-wrap: wrap; /* Allow wrapping on smaller screens */
         }
 
         .nav-button {
@@ -48,19 +49,19 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            width: 80px; /* Taille par défaut */
-            height: 80px; /* Taille par défaut */
+            width: 80px;
+            height: 80px;
             border-radius: 50%;
             background: #2563eb; /* Blue for navigation */
             color: #ffffff;
             text-decoration: none;
             font-weight: bold;
-            font-size: 0.8em; /* Taille de police par défaut */
+            font-size: 0.8em;
             text-align: center;
             padding: 0.5rem;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
             transition: background-color 0.3s ease, transform 0.1s ease;
-            border: none; /* Ensure no default button border */
+            border: none;
             cursor: pointer;
         }
 
@@ -70,23 +71,23 @@
         }
 
         .nav-button:active, .nav-button.active {
-            background: #1d4ed8; /* Darker blue for active state */
+            background: #1d4ed8;
             transform: translateY(0);
-            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3); /* Inner shadow for pressed effect */
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
         }
 
         .nav-button .icon {
-            font-size: 1.8em; /* Taille d'icône par défaut */
+            font-size: 1.8em;
             margin-bottom: 0.2em;
         }
 
         /* View sections visibility */
         .view-section {
-            display: none; /* Hidden by default */
+            display: none;
         }
 
         .view-section.active {
-            display: block; /* Shown when active */
+            display: block;
         }
 
         .container {
@@ -126,7 +127,7 @@
             -webkit-appearance: none;
             margin: 0;
         }
-        button[type="submit"], button.btn-action { /* Adjusted to target specific buttons */
+        button[type="submit"], button.btn-action {
             margin-top: 1.5rem;
             background: #4CAF50; /* Vert */
             color: #ffffff;
@@ -144,33 +145,56 @@
             transform: translateY(0);
         }
 
-        /* Styles for the new "Add Cigarette" button */
-        #addTodayCigaretteButton {
-            display: block;
-            width: 90%;
-            max-width: 300px; /* Limit width on larger screens */
-            padding: 1rem;
-            margin: 1.5rem auto 2rem auto; /* Center and add more vertical spacing */
+        /* NEW: Big Red Button for NOW tab */
+        #addTodayCigaretteBigButton {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 250px;
+            height: 250px;
+            border-radius: 50%;
             background: #ef4444; /* Rouge vif */
             color: white;
-            font-size: 1.5rem;
+            font-size: 1.2rem; /* Initial text size */
             font-weight: bold;
-            border: none;
-            border-radius: 0.75rem;
+            border: 5px solid #dc2626; /* Darker red border for "alarm" effect */
             cursor: pointer;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-            transition: background-color 0.3s ease, transform 0.1s ease;
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.7), 0 0 40px rgba(239, 68, 68, 0.4); /* Glow effect */
+            transition: background-color 0.3s ease, transform 0.1s ease, box-shadow 0.3s ease;
+            margin: 3rem auto; /* Center the button */
             text-align: center;
+            position: relative; /* For inner count display */
         }
 
-        #addTodayCigaretteButton:hover {
+        #addTodayCigaretteBigButton:hover {
             background: #dc2626;
-            transform: translateY(-2px);
+            transform: scale(1.02);
+            box-shadow: 0 0 25px rgba(239, 68, 68, 0.9), 0 0 50px rgba(239, 68, 68, 0.6);
         }
 
-        #addTodayCigaretteButton:active {
-            transform: translateY(0);
-            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+        #addTodayCigaretteBigButton:active {
+            transform: scale(0.98);
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+            background: #b91c1c;
+        }
+
+        #bigCigaretteCountDisplay {
+            font-size: 3.5rem; /* Larger font for count */
+            font-weight: bold;
+            color: #f9fafb;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none; /* Make sure clicks go through to the button */
+        }
+        #bigButtonText {
+            font-size: 1.2rem;
+            position: absolute;
+            bottom: 25px; /* Position below count */
+            width: 100%;
+            left: 0;
         }
 
 
@@ -218,7 +242,7 @@
             padding: 0.4rem 0.8rem;
             border-radius: 0.3rem;
             transition: background-color 0.3s ease;
-            margin-top: 0; /* Override global margin-top for action buttons */
+            margin-top: 0;
         }
         .btn-action:hover {
             background: #b91c1c;
@@ -261,57 +285,52 @@
             max-height: 400px;
             overflow: hidden;
         }
-        /* Style for the chart titles that are INSIDE the grey container, below the canvas */
         .chart-container h2 {
             text-align: center;
             color: #4CAF50;
-            margin-top: 1rem; /* Adjusted margin to place below canvas */
+            margin-top: 1rem;
             margin-bottom: 1rem;
         }
-        /* Style for the new main titles OUTSIDE the grey containers */
         .chart-main-title {
             text-align: center;
-            color: #FBBF24; /* Yellow for main chart titles */
-            margin-top: 2rem; /* More space above */
-            margin-bottom: 1rem; /* Space below */
-            font-size: 1.8em; /* Larger font size */
+            color: #FBBF24;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            font-size: 1.8em;
         }
 
-        /* Enforce canvas height and display */
         #dailyChart, #weeklyChart, #monthlyChart {
             max-width: 100%;
-            height: 300px; /* Fixed height for charts */
+            height: 300px;
             background: #111827;
-            padding: 1rem; /* Padding applied to canvas, not its container */
+            padding: 1rem;
             border-radius: 0.5rem;
-            display: block; /* Ensures canvas respects its dimensions */
-            margin: 0 auto; /* Center the canvas if it doesn't take full width */
+            display: block;
+            margin: 0 auto;
         }
 
-        /* Styles for increment/decrement buttons */
         .count-input-group {
             display: flex;
             align-items: center;
             gap: 0.5rem;
         }
         .count-input-group input[type="number"] {
-            flex-grow: 1; /* Allows the input to take available space */
-            margin-top: 0; /* Remove default margin-top from global input rule */
-            max-width: 100px;
-
+            flex-grow: 1;
+            margin-top: 0;
+            max-width: 100px; /* Constrain width for number input */
         }
         .count-input-group .count-button {
-            width: 40px; /* Fixed width for buttons */
-            height: 40px; /* Fixed height for buttons */
-            padding: 0; /* Remove padding */
-            margin-top: 0; /* Remove default margin-top */
+            width: 40px;
+            height: 40px;
+            padding: 0;
+            margin-top: 0;
             font-size: 1.5rem;
-            line-height: 1; /* Center content vertically */
+            line-height: 1;
             display: flex;
             justify-content: center;
             align-items: center;
             border-radius: 0.5rem;
-            background: #4CAF50; /* Green */
+            background: #4CAF50;
             color: white;
             cursor: pointer;
             border: none;
@@ -325,7 +344,7 @@
             transform: translateY(0);
         }
         .count-input-group .count-button.decrement {
-            background: #ef4444; /* Red for decrement */
+            background: #ef4444;
         }
         .count-input-group .count-button.decrement:hover {
             background: #b91c1c;
@@ -356,7 +375,7 @@
             border-radius: 0.5rem;
             cursor: pointer;
             font-size: 1em;
-            width: auto; /* Override default button width */
+            width: auto;
         }
         .calendar-header button:hover {
             background: #1d4ed8;
@@ -376,11 +395,11 @@
             font-weight: bold;
             background: #111827;
             color: #f9fafb;
-            min-height: 40px; /* Ensure consistent height */
+            min-height: 40px;
             display: flex;
             align-items: center;
             justify-content: center;
-            cursor: pointer; /* Make day cells clickable for potential future features */
+            cursor: pointer;
         }
         .day-cell.inactive {
             color: #6b7280;
@@ -431,43 +450,58 @@
             margin-top: 1rem;
         }
         .badge-card {
-            background: #1e293b; /* Slightly darker than container */
+            background: #1e293b;
             padding: 0.8rem;
             border-radius: 0.5rem;
             text-align: center;
-            border: 1px solid #4CAF50; /* Green border */
+            border: 1px solid #4CAF50;
+            display: flex; /* For progress text */
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 120px; /* Ensure consistent height */
         }
         .badge-card .badge-icon {
             font-size: 2em;
             margin-bottom: 0.2rem;
+            flex-grow: 1; /* Allow icon to take space */
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         .badge-card .badge-name {
             font-weight: bold;
             color: #FBBF24;
             font-size: 0.9em;
+            margin-bottom: 0.2rem;
         }
         .badge-card .badge-description {
             font-size: 0.75em;
             color: #cbd5e1;
             margin-top: 0.2rem;
         }
+        .badge-card .badge-progress {
+            font-size: 0.7em;
+            color: #a0aec0; /* Grey for progress text */
+            margin-top: 0.5rem;
+            font-weight: bold;
+        }
 
 
         @media (max-width: 640px) {
             body {
-                padding: 0.5rem; /* Réduire le padding du body */
+                padding: 0.5rem;
             }
             .container {
                 padding: 1rem;
                 margin: 0.5rem auto;
             }
-            h1 { /* Reduce title size */
+            h1 {
                 font-size: 1.8em;
             }
-            h2 { /* Reduce section title size */
+            h2 {
                 font-size: 1.4em;
             }
-            h3 { /* Reduce sub-section title size */
+            h3 {
                 font-size: 1.1em;
             }
             label {
@@ -477,43 +511,53 @@
             input[type="number"],
             button,
             select {
-                padding: 0.6rem; /* Slightly less padding for inputs/buttons */
+                padding: 0.6rem;
                 font-size: 0.9rem;
             }
             button[type="submit"], button.btn-action {
-                font-size: 1rem; /* Slightly smaller button font */
+                font-size: 1rem;
             }
 
-            #addTodayCigaretteButton {
-                width: 100%; /* Take full width on mobile */
-                padding: 0.8rem;
-                font-size: 1.2rem;
-                margin: 1rem auto 1.5rem auto; /* Adjust margin */
+            /* Big Red Button for NOW tab responsive */
+            #addTodayCigaretteBigButton {
+                width: 200px;
+                height: 200px;
+                font-size: 1rem;
+                border-width: 3px;
+                margin: 2rem auto;
             }
+            #bigCigaretteCountDisplay {
+                font-size: 2.8rem;
+            }
+            #bigButtonText {
+                font-size: 1rem;
+                bottom: 20px;
+            }
+
 
             .nav-buttons-container {
                 align-items: center;
-                gap: 0.4rem; /* Réduire l'espacement entre les boutons */
-                margin-bottom: 1.5rem; /* Moins de marge en bas */
+                gap: 0.4rem;
+                margin-bottom: 1.5rem;
             }
             .nav-button {
-                width: 60px; /* Taille encore plus petite pour les boutons */
+                width: 60px;
                 height: 60px;
-                font-size: 0.6em; /* Texte des boutons encore plus petit */
-                padding: 0.3rem; /* Padding réduit */
+                font-size: 0.6em;
+                padding: 0.3rem;
             }
             .nav-button .icon {
-                font-size: 1.4em; /* Icône légèrement plus petite */
+                font-size: 1.4em;
                 margin-bottom: 0.1em;
             }
 
             .record-item {
                 flex-direction: column;
                 align-items: flex-start;
-                padding: 0.6rem 1rem; /* Réduire padding */
+                padding: 0.6rem 1rem;
             }
             .record-item span {
-                font-size: 0.9em; /* Texte des records plus petit */
+                font-size: 0.9em;
             }
             .record-item .date, .record-item .count {
                 flex-basis: 100%;
@@ -523,86 +567,84 @@
                 margin-left: 0;
                 width: 100%;
                 justify-content: flex-end;
-                gap: 0.3rem; /* Espacement réduit pour les boutons d'action */
+                gap: 0.3rem;
             }
             .btn-action {
-                padding: 0.3rem 0.6rem; /* Padding réduit pour les boutons d'action */
-                font-size: 0.8rem; /* Texte des boutons d'action plus petit */
+                padding: 0.3rem 0.6rem;
+                font-size: 0.8rem;
             }
 
-            /* Stats cards smaller on mobile and 2 columns */
             .stats-section {
-                grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); /* 2 colonnes pour les statistiques */
-                gap: 0.5rem; /* Espacement réduit */
+                grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+                gap: 0.5rem;
                 margin-top: 1.5rem;
             }
             .stat-card {
-                padding: 0.5rem; /* Réduire le padding encore */
+                padding: 0.5rem;
             }
             .stat-card h3 {
-                font-size: 0.9em; /* Texte encore plus petit pour les titres */
+                font-size: 0.9em;
                 margin-bottom: 0.3rem;
             }
             .stat-card p {
-                font-size: 1.3em; /* Texte encore plus petit pour les valeurs */
+                font-size: 1.3em;
             }
 
             .count-input-group {
-                flex-wrap: nowrap; /* Empêche le retour à la ligne des boutons */
-                gap: 0.3rem; /* Réduire l'espacement */
+                flex-wrap: nowrap;
+                gap: 0.3rem;
             }
             .count-input-group input[type="number"] {
                 width: auto;
-                max-width: 80px; /* Max width for number input */
+                max-width: 80px;
             }
             .count-input-group .count-button {
-                width: 35px; /* Boutons de compteur plus petits */
+                width: 35px;
                 height: 35px;
                 font-size: 1.2rem;
             }
 
-            /* Calendar responsive */
             .calendar {
-                gap: 2px; /* Espacement des cellules réduit */
+                gap: 2px;
             }
             .calendar-header {
-                font-size: 1em; /* Taille du texte d'en-tête du calendrier */
+                font-size: 1em;
                 margin-bottom: 0.8rem;
             }
             .calendar-header button {
-                padding: 0.4rem 0.7rem; /* Padding réduit pour les boutons du calendrier */
+                padding: 0.4rem 0.7rem;
                 font-size: 0.9em;
             }
             .day-name, .day-cell {
-                font-size: 0.75em; /* Texte des jours plus petit */
+                font-size: 0.75em;
                 padding: 0.3rem 0;
-                min-height: 35px; /* Hauteur min des cellules réduite */
+                min-height: 35px;
             }
 
-            /* Chart containers for smaller height */
             .chart-container {
                 margin-top: 1.5rem;
             }
             #dailyChart, #weeklyChart, #monthlyChart {
-                height: 250px; /* Réduire la hauteur des graphiques */
+                height: 250px;
                 padding: 0.8rem;
             }
             .chart-main-title {
-                font-size: 1.4em; /* Titre principal du graphique plus petit */
+                font-size: 1.4em;
                 margin-top: 1.5rem;
             }
             .chart-container h2 {
-                font-size: 1em; /* Titre sous le graphique plus petit */
+                font-size: 1em;
                 margin-top: 0.8rem;
             }
 
             /* Badges Grid Styles for Mobile */
             .badges-grid {
-                grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); /* Smaller grid for mobile */
+                grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
                 gap: 0.5rem;
             }
             .badge-card {
                 padding: 0.6rem;
+                min-height: 100px;
             }
             .badge-card .badge-icon {
                 font-size: 1.5em;
@@ -612,6 +654,9 @@
             }
             .badge-card .badge-description {
                 font-size: 0.65em;
+            }
+            .badge-card .badge-progress {
+                font-size: 0.6em;
             }
         }
     </style>
@@ -631,13 +676,13 @@
     <h1 id="mainTitle">SmokeTrack <span class="logo">🚭</span></h1>
 
     <div class="nav-buttons-container">
-        <button class="nav-button active" data-target="consumptionView">
+        <button class="nav-button active" data-target="nowView">
+            <span class="icon">🚀</span>
+            NOW
+        </button>
+        <button class="nav-button" data-target="consumptionView">
             <span class="icon">🚬</span>
             Consommation
-        </button>
-        <button class="nav-button" data-target="historyView">
-            <span class="icon">📜</span>
-            Historique
         </button>
         <button class="nav-button" data-target="calendarView">
             <span class="icon">📅</span>
@@ -653,29 +698,12 @@
         </button>
     </div>
 
-    <div id="consumptionView" class="view-section active">
-        <button id="addTodayCigaretteButton">Ajouter une cigarette aujourd'hui</button>
-
-        <div class="container">
-            <h2>Add your consumption</h2>
-            <form id="cigaretteForm">
-                <label for="recordDate">Date</label>
-                <input type="date" id="recordDate" required />
-
-                <label for="cigaretteCount">Nombre de cigarettes</label>
-                <div class="count-input-group">
-                    <button type="button" id="decrementCount" class="count-button decrement">-</button>
-                    <input type="number" id="cigaretteCount" min="0" value="0" required />
-                    <button type="button" id="incrementCount" class="count-button">+</button>
-                </div>
-            </form>
-        </div>
-
+    <div id="nowView" class="view-section active">
+        <button id="addTodayCigaretteBigButton">
+            <span id="bigCigaretteCountDisplay"></span>
+            <span id="bigButtonText">Ajouter une cigarette</span>
+        </button>
         <div class="container stats-section">
-            <div class="stat-card">
-                <h3>Moyenne quotidienne (7j)</h3>
-                <p id="avgDailyLast7Days">0</p>
-            </div>
             <div class="stat-card">
                 <h3>Total aujourd'hui</h3>
                 <p id="totalToday">0</p>
@@ -693,21 +721,32 @@
                 <p id="longestStreak">0 jours</p>
             </div>
             <div class="stat-card">
-                <h3>Total cette semaine</h3>
-                <p id="totalThisWeek">0</p>
+                <h3>Argent économisé aujourd'hui</h3>
+                <p id="savedToday">0.00 €</p>
             </div>
             <div class="stat-card">
-                <h3>Total ce mois</h3>
-                <p id="totalThisMonth">0</p>
-            </div>
-            <div class="stat-card">
-                <h3>Total général</h3>
-                <p id="totalCigarettesSmoked">0</p>
+                <h3>Total économisé</h3>
+                <p id="savedTotal">0.00 €</p>
             </div>
         </div>
     </div>
 
-    <div id="historyView" class="view-section">
+
+    <div id="consumptionView" class="view-section">
+        <div class="container">
+            <h2>Enregistrer ou Modifier</h2>
+            <form id="cigaretteForm">
+                <label for="recordDate">Date</label>
+                <input type="date" id="recordDate" required />
+
+                <label for="cigaretteCount">Nombre de cigarettes</label>
+                <div class="count-input-group">
+                    <button type="button" id="decrementCount" class="count-button decrement">-</button>
+                    <input type="number" id="cigaretteCount" min="0" value="0" required />
+                    <button type="button" id="incrementCount" class="count-button">+</button>
+                </div>
+            </form>
+        </div>
         <div class="container">
             <h2>Historique des consommations</h2>
             <div id="recordList">
@@ -719,7 +758,7 @@
         <div class="container">
             <h2>Calendrier de consommation</h2>
             <div id="calendarContainer">
-                </div>
+            </div>
         </div>
     </div>
 
@@ -769,23 +808,15 @@
             <label for="baselineCigarettesPerDay">Ma consommation moyenne avant de commencer (cigarettes/jour)</label>
             <input type="number" id="baselineCigarettesPerDay" min="0" value="20" />
 
-            <h3 style="margin-top: 2rem;">Argent économisé</h3>
+            <h3 style="margin-top: 2rem;">Vos économies</h3>
             <div class="stats-section">
-                <div class="stat-card">
-                    <h3>Aujourd'hui</h3>
-                    <p id="savedToday">0.00 €</p>
-                </div>
                 <div class="stat-card">
                     <h3>Cette semaine</h3>
                     <p id="savedThisWeek">0.00 €</p>
                 </div>
-                <div class="stat-card">
-                    <h3>Total depuis le début</h3>
-                    <p id="savedTotal">0.00 €</p>
-                </div>
             </div>
 
-            <h3 style="margin-top: 2rem;">Vos badges</h3>
+            <h3 style="margin-top: 2rem;">Vos badges et objectifs</h3>
             <div id="badgeDisplayArea" class="badges-grid">
                 </div>
 
@@ -803,33 +834,37 @@
         const cigaretteForm = document.getElementById('cigaretteForm');
         const recordDateInput = document.getElementById('recordDate');
         const cigaretteCountInput = document.getElementById('cigaretteCount');
-        const recordList = document.getElementById('recordList');
+        const recordList = document.getElementById('recordList'); // Still used for consumption view history
         const mainTitle = document.getElementById('mainTitle');
         const incrementButton = document.getElementById('incrementCount');
         const decrementButton = document.getElementById('decrementCount');
-        const addTodayCigaretteButton = document.getElementById('addTodayCigaretteButton'); // New button reference
 
-        // Stats elements
-        const avgDailyLast7DaysElement = document.getElementById('avgDailyLast7Days');
-        const totalTodayElement = document.getElementById('totalToday');
+        // New elements for NOW tab
+        const addTodayCigaretteBigButton = document.getElementById('addTodayCigaretteBigButton');
+        const bigCigaretteCountDisplay = document.getElementById('bigCigaretteCountDisplay');
+
+
+        // Stats elements (some moved to NOW view)
+        const avgDailyLast7DaysElement = document.getElementById('avgDailyLast7Days'); // Kept for consumption stats page
+        const totalTodayElement = document.getElementById('totalToday'); // Moved to NOW view
         const totalThisWeekElement = document.getElementById('totalThisWeek');
         const totalThisMonthElement = document.getElementById('totalThisMonth');
         const totalCigarettesSmokedElement = document.getElementById('totalCigarettesSmoked');
-        const dailyGoalStatusElement = document.getElementById('dailyGoalStatus');
-        const smokeFreeDaysCountElement = document.getElementById('smokeFreeDaysCount');
-        const longestStreakElement = document.getElementById('longestStreak');
+        const dailyGoalStatusElement = document.getElementById('dailyGoalStatus'); // Moved to NOW view
+        const smokeFreeDaysCountElement = document.getElementById('smokeFreeDaysCount'); // Moved to NOW view
+        const longestStreakElement = document.getElementById('longestStreak'); // Moved to NOW view
 
         // Settings elements
         const dailyGoalInput = document.getElementById('dailyGoalInput');
         const incrementGoalButton = document.getElementById('incrementGoal');
         const decrementGoalButton = document.getElementById('decrementGoal');
-        const startDateInput = document.getElementById('startDateInput'); // New element
+        const startDateInput = document.getElementById('startDateInput');
         const packPriceInput = document.getElementById('packPrice');
         const cigsPerPackInput = document.getElementById('cigsPerPack');
         const baselineCigarettesPerDayInput = document.getElementById('baselineCigarettesPerDay');
-        const savedTodayElement = document.getElementById('savedToday');
+        const savedTodayElement = document.getElementById('savedToday'); // Moved to NOW view
         const savedThisWeekElement = document.getElementById('savedThisWeek');
-        const savedTotalElement = document.getElementById('savedTotal');
+        const savedTotalElement = document.getElementById('savedTotal'); // Moved to NOW view
 
         // Data management buttons
         const exportDataButton = document.getElementById('exportData');
@@ -844,7 +879,7 @@
 
         // Calendar elements
         const calendarContainer = document.getElementById('calendarContainer');
-        let currentCalendarDate = new Date(); // To keep track of the month displayed in the calendar
+        let currentCalendarDate = new Date();
 
         // Badge elements
         const badgeDisplayArea = document.getElementById('badgeDisplayArea');
@@ -877,7 +912,7 @@
 
         // Settings variables (loaded from localStorage)
         let dailyGoal = parseInt(localStorage.getItem('dailyCigaretteGoal')) || 0;
-        let startDate = localStorage.getItem('startDate') || formatLocalDateToISOString(new Date()); // Default to today
+        let startDate = localStorage.getItem('startDate') || formatLocalDateToISOString(new Date());
         let packPrice = parseFloat(localStorage.getItem('packPrice')) || 10.00;
         let cigsPerPack = parseInt(localStorage.getItem('cigsPerPack')) || 20;
         let baselineCigarettesPerDay = parseInt(localStorage.getItem('baselineCigarettesPerDay')) || 20;
@@ -934,12 +969,13 @@
 
             // Sort records by date descending for display
             records.sort((a, b) => parseISODateStringToLocalDate(b.date) - parseISODateStringToLocalDate(a.date));
-            displayRecords();
+            displayRecords(); // Render history in consumption tab
             updateStatistics();
             checkAndAwardBadges(); // Check for badges after stats are updated
             prepareChartData(); // Prepare chart data after records are loaded/updated
             renderCalendar(currentCalendarDate); // Render calendar after records are loaded
             updateConsumptionViewForSelectedDate(); // Update consumption view with current date's record
+            updateBigButtonDisplay(); // Update the display on the NOW button
         }
 
         function displayRecords() {
@@ -998,7 +1034,7 @@
 
         function formatDate(dateStr) {
             if (!dateStr) return 'N/A';
-            const d = parseISODateStringToLocalDate(dateStr); // Use helper to ensure local date interpretation
+            const d = parseISODateStringToLocalDate(dateStr);
             return d.toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' });
         }
 
@@ -1040,12 +1076,12 @@
 
             localStorage.setItem('smokeTrackRecords', JSON.stringify(records));
             loadRecords(); // Reload to update list, stats, and charts
-            if (count > 0 || (existingRecordIndex !== -1 && count === 0)) { // Only show snackbar if an action truly occurred
+            if (count > 0 || (existingRecordIndex !== -1 && count === 0)) {
                 showSnackbar(message);
             }
         }
 
-        // Écouteurs d'événements pour l'enregistrement automatique
+        // Event listeners for consumption input (standard +- buttons)
         incrementButton.addEventListener('click', () => {
             cigaretteCountInput.value = parseInt(cigaretteCountInput.value, 10) + 1;
             saveOrUpdateConsumption();
@@ -1055,16 +1091,12 @@
             const currentCount = parseInt(cigaretteCountInput.value, 10);
             if (currentCount > 0) {
                 cigaretteCountInput.value = currentCount - 1;
-            } else if (currentCount === 0) {
-                 // If it's already 0, and they decrement, trigger save to remove the 0-count record if exists
             }
-            saveOrUpdateConsumption(); // Appeler même si le compte est déjà 0 pour gérer la suppression
+            saveOrUpdateConsumption();
         });
-
 
         cigaretteCountInput.addEventListener('input', () => {
              const value = cigaretteCountInput.value;
-            // Allow empty string temporarily for user input, but don't save.
             if (value === '' || value === null || isNaN(parseInt(value, 10))) {
                 return;
             }
@@ -1074,19 +1106,41 @@
             }
         });
 
-        // New "Add Cigarette Today" button logic
-        addTodayCigaretteButton.addEventListener('click', () => {
+        // NEW: Big "Add Cigarette Today" button logic for NOW tab
+        addTodayCigaretteBigButton.addEventListener('click', () => {
             const todayISO = formatLocalDateToISOString(new Date());
             const existingRecord = records.find(r => r.date === todayISO);
             const currentCount = existingRecord ? existingRecord.count : 0;
-            
-            // Set the date input to today
-            recordDateInput.value = todayISO;
-            // Increment the count and save
-            cigaretteCountInput.value = currentCount + 1;
-            saveOrUpdateConsumption();
+
+            const newCount = currentCount + 1;
+
+            // Find the record for today, or create a new one if it doesn't exist
+            const recordIndex = records.findIndex(r => r.date === todayISO);
+            if (recordIndex !== -1) {
+                records[recordIndex].count = newCount;
+            } else {
+                records.push({ id: generateUniqueId(), date: todayISO, count: newCount });
+            }
+
+            localStorage.setItem('smokeTrackRecords', JSON.stringify(records));
+            loadRecords(); // Reload to update all stats, history, calendar, and NOW button display
             showSnackbar('Cigarette ajoutée pour aujourd\'hui !');
         });
+
+        // NEW: Function to update the display on the big NOW button
+        function updateBigButtonDisplay() {
+            const todayISO = formatLocalDateToISOString(new Date());
+            const existingRecord = records.find(r => r.date === todayISO);
+            const count = existingRecord ? existingRecord.count : 0;
+
+            if (count > 0) {
+                bigCigaretteCountDisplay.textContent = count;
+                document.getElementById('bigButtonText').textContent = 'cigarettes aujourd\'hui';
+            } else {
+                bigCigaretteCountDisplay.textContent = ''; // Display nothing if count is 0
+                document.getElementById('bigButtonText').textContent = 'Ajouter une cigarette';
+            }
+        }
 
 
         function updateConsumptionViewForSelectedDate() {
@@ -1106,7 +1160,7 @@
             baselineCigarettesPerDay = parseInt(localStorage.getItem('baselineCigarettesPerDay')) || 20;
 
             dailyGoalInput.value = dailyGoal;
-            startDateInput.value = startDate; // Set the value for the new input
+            startDateInput.value = startDate;
             packPriceInput.value = packPrice.toFixed(2);
             cigsPerPackInput.value = cigsPerPack;
             baselineCigarettesPerDayInput.value = baselineCigarettesPerDay;
@@ -1114,19 +1168,20 @@
 
         function saveSettings() {
             dailyGoal = parseInt(dailyGoalInput.value, 10);
-            startDate = startDateInput.value; // Get value from the new input
+            startDate = startDateInput.value;
             packPrice = parseFloat(packPriceInput.value);
             cigsPerPack = parseInt(cigsPerPackInput.value, 10);
             baselineCigarettesPerDay = parseInt(baselineCigarettesPerDayInput.value, 10);
 
             localStorage.setItem('dailyCigaretteGoal', dailyGoal);
-            localStorage.setItem('startDate', startDate); // Save the new setting
+            localStorage.setItem('startDate', startDate);
             localStorage.setItem('packPrice', packPrice);
             localStorage.setItem('cigsPerPack', cigsPerPack);
             localStorage.setItem('baselineCigarettesPerDay', baselineCigarettesPerDay);
 
             updateStatistics();
             showSnackbar('Paramètres sauvegardés.');
+            displayBadges(); // Refresh badge display in case thresholds were met with new settings
         }
 
         incrementGoalButton.addEventListener('click', () => {
@@ -1136,16 +1191,17 @@
 
         decrementGoalButton.addEventListener('click', () => {
             const currentGoal = parseInt(dailyGoalInput.value, 10);
-            if (currentGoal > 0) {
+            if (currentGoal > 0) { // Allow goal to be 0
                 dailyGoalInput.value = currentGoal - 1;
+            } else if (currentGoal === 0 && dailyGoalInput.min === '0') {
+                dailyGoalInput.value = 0; // Ensure it stays 0 if min is 0
             }
             saveSettings();
         });
 
-        // Add event listener for the new startDateInput
         startDateInput.addEventListener('change', saveSettings);
 
-        packPriceInput.addEventListener('input', () => { // Use input for live update while typing
+        packPriceInput.addEventListener('input', () => {
             const value = packPriceInput.value;
             if (value === '' || isNaN(parseFloat(value))) return;
             saveSettings();
@@ -1164,7 +1220,7 @@
 
         function updateStatistics() {
             const now = new Date();
-            now.setHours(0, 0, 0, 0); // Normalize to start of today
+            now.setHours(0, 0, 0, 0);
 
             let totalToday = 0;
             let totalThisWeek = 0;
@@ -1174,17 +1230,15 @@
 
             const costPerCigarette = (cigsPerPack > 0) ? (packPrice / cigsPerPack) : 0;
 
-            // For smoke-free days and longest streak, iterate from user's start date
-            const userStartDate = parseISODateStringToLocalDate(startDate); // Parse the user's start date
-            userStartDate.setHours(0, 0, 0, 0); // Normalize to start of day
+            const userStartDate = parseISODateStringToLocalDate(startDate);
+            userStartDate.setHours(0, 0, 0, 0);
 
             let smokeFreeDays = 0;
             let currentStreak = 0;
             let longestStreak = 0;
 
-            // Loop from userStartDate up to today (inclusive) to calculate streak and smokeFreeDays
             for (let d = new Date(userStartDate); d <= now; d.setDate(d.getDate() + 1)) {
-                const dayISO = formatLocalDateToISOString(d); // Get Drapeau-MM-DD for the current day in loop
+                const dayISO = formatLocalDateToISOString(d);
                 const recordForDay = records.find(r => r.date === dayISO);
 
                 if (!recordForDay || recordForDay.count === 0) {
@@ -1195,13 +1249,10 @@
                     currentStreak = 0;
                 }
             }
-            // After the loop, update longestStreak one last time for any streak ending today
             longestStreak = Math.max(longestStreak, currentStreak);
 
 
-            // For saved money calculation, also start from userStartDate
             let totalCigsNotSmokedEver = 0;
-            // Iterate from userStartDate up to today (inclusive)
             for (let d = new Date(userStartDate); d <= now; d.setDate(d.getDate() + 1)) {
                 const dayISO = formatLocalDateToISOString(d);
                 const recordForDay = records.find(r => r.date === dayISO);
@@ -1211,27 +1262,23 @@
 
 
             records.forEach(record => {
-                const recordDate = parseISODateStringToLocalDate(record.date); // Use helper
+                const recordDate = parseISODateStringToLocalDate(record.date);
                 recordDate.setHours(0, 0, 0, 0);
 
-                // Total général (all records, regardless of start date)
                 grandTotal += record.count;
 
-                // Total Today
                 if (recordDate.toDateString() === now.toDateString()) {
                     totalToday += record.count;
                 }
 
-                // Total This Week (Sunday to Saturday for simplicity, adjust as needed)
                 const startOfWeek = new Date(now);
-                startOfWeek.setDate(now.getDate() - now.getDay()); // Go to Sunday
+                startOfWeek.setDate(now.getDate() - now.getDay());
                 startOfWeek.setHours(0, 0, 0, 0);
 
                 if (recordDate >= startOfWeek && recordDate <= now) {
                     totalThisWeek += record.count;
                 }
 
-                // Total This Month
                 const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
                 startOfMonth.setHours(0, 0, 0, 0);
 
@@ -1239,9 +1286,8 @@
                     totalThisMonth += record.count;
                 }
 
-                // Last 7 Days Average
                 const sevenDaysAgo = new Date(now);
-                sevenDaysAgo.setDate(now.getDate() - 6); // Includes today
+                sevenDaysAgo.setDate(now.getDate() - 6);
                 sevenDaysAgo.setHours(0, 0, 0, 0);
 
                 if (recordDate >= sevenDaysAgo && recordDate <= now) {
@@ -1249,21 +1295,18 @@
                 }
             });
 
-            // Calculate average for last 7 days
             const dailyTotals = {};
             last7DaysCounts.forEach(item => {
                 dailyTotals[item.date] = (dailyTotals[item.date] || 0) + item.count;
             });
 
             let sumLast7Days = 0;
-            let daysConsideredFor7DayAvg = 0; // Number of days within the last 7 with a record (or 0 if no record)
-            // First record date is used here to avoid counting days before any records existed for the average
-            const firstRecordDate = records.length > 0 ? parseISODateStringToLocalDate(records[records.length - 1].date) : null; // Sorted descending, so last is earliest
+            let daysConsideredFor7DayAvg = 0;
+            const firstRecordDate = records.length > 0 ? parseISODateStringToLocalDate(records[records.length - 1].date) : null;
             for (let i = 0; i < 7; i++) {
                 const date = new Date(now);
                 date.setDate(now.getDate() - i);
                 const dateString = date.toDateString();
-                // Only consider days for average if they are on or after the first recorded date
                 if (!firstRecordDate || date >= firstRecordDate) {
                     sumLast7Days += (dailyTotals[dateString] || 0);
                     daysConsideredFor7DayAvg++;
@@ -1272,17 +1315,16 @@
             const avgDailyLast7Days = daysConsideredFor7DayAvg > 0 ? (sumLast7Days / daysConsideredFor7DayAvg).toFixed(1) : 0;
 
 
-            // Calculate savings amounts
             const savedTodayCigs = Math.max(0, baselineCigarettesPerDay - totalToday);
             const savedTodayAmount = (savedTodayCigs * costPerCigarette).toFixed(2);
 
             let savedThisWeekCigs = 0;
-            const startOfWeek = new Date(now);
-            startOfWeek.setDate(now.getDate() - now.getDay()); // Sunday
-            startOfWeek.setHours(0,0,0,0);
+            const startOfWeekForSaved = new Date(now);
+            startOfWeekForSaved.setDate(now.getDate() - now.getDay());
+            startOfWeekForSaved.setHours(0,0,0,0);
 
-            for (let d = new Date(startOfWeek); d <= now; d.setDate(d.getDate() + 1)) {
-                const dayISO = formatLocalDateToISOString(d); // Use helper for consistency
+            for (let d = new Date(startOfWeekForSaved); d <= now; d.setDate(d.getDate() + 1)) {
+                const dayISO = formatLocalDateToISOString(d);
                 const recordForDay = records.find(r => r.date === dayISO);
                 savedThisWeekCigs += Math.max(0, baselineCigarettesPerDay - (recordForDay ? recordForDay.count : 0));
             }
@@ -1292,29 +1334,22 @@
             const savedTotalAmount = (totalCigsNotSmokedEver * costPerCigarette).toFixed(2);
 
 
-            avgDailyLast7DaysElement.textContent = avgDailyLast7Days;
+            // Update elements (some shared, some specific to NOW/Consumption/Settings)
+            // NOW View Stats
             totalTodayElement.textContent = totalToday;
-            totalThisWeekElement.textContent = totalThisWeek;
-            totalThisMonthElement.textContent = totalThisMonth;
-            totalCigarettesSmokedElement.textContent = grandTotal;
-
-            // Update Goal Status
-            if (dailyGoal > 0) {
-                dailyGoalStatusElement.textContent = `${totalToday} / ${dailyGoal} ${totalToday <= dailyGoal ? '✔️' : '❌'}`;
-                dailyGoalStatusElement.style.color = totalToday <= dailyGoal ? '#4CAF50' : '#ef4444';
-            } else {
-                dailyGoalStatusElement.textContent = `Non défini`;
-                dailyGoalStatusElement.style.color = '#d1d5db';
-            }
-
-            // Update smoke-free stats
+            dailyGoalStatusElement.textContent = `${totalToday} / ${dailyGoal} ${totalToday <= dailyGoal ? '✔️' : '❌'}`;
+            dailyGoalStatusElement.style.color = totalToday <= dailyGoal ? '#4CAF50' : '#ef4444';
             smokeFreeDaysCountElement.textContent = smokeFreeDays;
             longestStreakElement.textContent = `${longestStreak} jours`;
-
-            // Update savings display
             savedTodayElement.textContent = `${savedTodayAmount} €`;
-            savedThisWeekElement.textContent = `${savedThisWeekAmount} €`;
             savedTotalElement.textContent = `${savedTotalAmount} €`;
+
+            // Consumption View Stats (if any still there, avg daily is the main one)
+            // avgDailyLast7DaysElement.textContent = avgDailyLast7Days; // Currently not displayed in consumption view
+
+            // Settings View Stats
+            savedThisWeekElement.textContent = `${savedThisWeekAmount} €`;
+
         }
 
         function checkAndAwardBadges() {
@@ -1323,7 +1358,7 @@
             const currentLongestStreak = parseInt(longestStreakElement.textContent.replace(' jours', '')) || 0;
 
             badgeDefinitions.forEach(badge => {
-                if (!earnedBadges.some(b => b.id === badge.id)) { // If badge not already earned
+                if (!earnedBadges.some(b => b.id === badge.id)) {
                     let conditionMet = false;
                     if (badge.type === 'longestStreak' && currentLongestStreak >= badge.threshold) {
                         conditionMet = true;
@@ -1341,31 +1376,69 @@
 
             if (newBadgesEarned) {
                 localStorage.setItem('earnedBadges', JSON.stringify(earnedBadges));
-                displayBadges(); // Re-render badges if new ones are earned
+                displayBadges();
             }
         }
 
         function displayBadges() {
-            badgeDisplayArea.innerHTML = ''; // Clear previous badges
-            if (earnedBadges.length === 0) {
-                badgeDisplayArea.innerHTML = '<p style="text-align: center; color: #d1d5db;">Aucun badge débloqué pour le moment.</p>';
+            badgeDisplayArea.innerHTML = '';
+            const currentSavedTotal = parseFloat(savedTotalElement.textContent.replace(' €', '')) || 0;
+            const currentLongestStreak = parseInt(longestStreakElement.textContent.replace(' jours', '')) || 0;
+
+            if (badgeDefinitions.length === 0) {
+                badgeDisplayArea.innerHTML = '<p style="text-align: center; color: #d1d5db;">Aucun badge défini.</p>';
                 return;
             }
 
-            // Sort badges by their timestamp (when they were earned)
-            earnedBadges.sort((a, b) => a.timestamp - b.timestamp);
+            // Sort earned badges by timestamp for display
+            const sortedEarnedBadges = [...earnedBadges].sort((a, b) => a.timestamp - b.timestamp);
+            const earnedBadgeIds = new Set(sortedEarnedBadges.map(b => b.id));
 
-            earnedBadges.forEach(badge => {
+            // Display earned badges first
+            sortedEarnedBadges.forEach(badgeDef => {
                 const badgeCard = document.createElement('div');
                 badgeCard.className = 'badge-card';
+
                 badgeCard.innerHTML = `
-                    <div class="badge-icon">${badge.icon}</div>
-                    <div class="badge-name">${badge.name}</div>
-                    <div class="badge-description">${badge.description}</div>
+                    <div class="badge-icon">${badgeDef.icon}</div>
+                    <div class="badge-name">${badgeDef.name}</div>
+                    <div class="badge-description">${badgeDef.description}</div>
                 `;
                 badgeDisplayArea.appendChild(badgeCard);
             });
+
+            // Display unearned badges greyed out with progress
+            badgeDefinitions.forEach(badgeDef => {
+                if (!earnedBadgeIds.has(badgeDef.id)) {
+                    const badgeCard = document.createElement('div');
+                    badgeCard.className = 'badge-card';
+                    let progressText = '';
+                    let badgeStyle = 'filter: grayscale(100%) opacity(0.6); -webkit-filter: grayscale(100%) opacity(0.6);';
+
+                    if (badgeDef.type === 'longestStreak') {
+                        progressText = `Progrès : ${currentLongestStreak} / ${badgeDef.threshold} jours`;
+                    } else if (badgeDef.type === 'savedMoney') {
+                        progressText = `Progrès : ${currentSavedTotal.toFixed(2)} / ${badgeDef.threshold.toFixed(2)} €`;
+                    }
+
+                    badgeCard.style.cssText = badgeStyle;
+
+                    badgeCard.innerHTML = `
+                        <div class="badge-icon">${badgeDef.icon}</div>
+                        <div class="badge-name">${badgeDef.name}</div>
+                        <div class="badge-description">${badgeDef.description}</div>
+                        ${progressText ? `<div class="badge-progress">${progressText}</div>` : ''}
+                    `;
+                    badgeDisplayArea.appendChild(badgeCard);
+                }
+            });
+
+            // If no badges are earned and none defined (shouldn't happen with badgeDefinitions), show message
+            if (badgeDefinitions.length === 0 && earnedBadges.length === 0) {
+                badgeDisplayArea.innerHTML = '<p style="text-align: center; color: #d1d5db;">Aucun badge disponible.</p>';
+            }
         }
+
 
 
         function prepareChartData() {
@@ -1374,15 +1447,15 @@
             const monthlyData = {};
 
             records.forEach(record => {
-                const date = parseISODateStringToLocalDate(record.date); // Use helper
+                const date = parseISODateStringToLocalDate(record.date);
                 date.setHours(0, 0, 0, 0);
 
-                const dayKey = formatLocalDateToISOString(date); // Use helper
+                const dayKey = formatLocalDateToISOString(date);
                 dailyData[dayKey] = (dailyData[dayKey] || 0) + record.count;
 
                 const startOfWeek = new Date(date);
                 startOfWeek.setDate(date.getDate() - date.getDay());
-                const weekKey = formatLocalDateToISOString(startOfWeek); // Use helper
+                const weekKey = formatLocalDateToISOString(startOfWeek);
                 weeklyData[weekKey] = (weeklyData[weekKey] || 0) + record.count;
 
                 const monthKey = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
@@ -1398,7 +1471,7 @@
             for (let i = limitDays - 1; i >= 0; i--) {
                 const d = new Date(today);
                 d.setDate(today.getDate() - i);
-                const dateKey = formatLocalDateToISOString(d); // Use helper
+                const dateKey = formatLocalDateToISOString(d);
                 const displayDate = formatDate(dateKey).replace(` ${d.getFullYear()}`, '');
 
                 dailyChartLabels.push(displayDate);
@@ -1407,10 +1480,10 @@
 
             const sortedWeeklyLabels = Object.keys(weeklyData).sort();
             const readableWeeklyLabels = sortedWeeklyLabels.map(d => {
-                const startDate = parseISODateStringToLocalDate(d); // Use helper
+                const startDate = parseISODateStringToLocalDate(d);
                 const endDate = new Date(startDate);
                 endDate.setDate(startDate.getDate() + 6);
-                return `${formatDate(formatLocalDateToISOString(startDate)).slice(0, -5)} - ${formatDate(formatLocalDateToISOString(endDate)).slice(0, -5)}`; // Use helper for consistency
+                return `${formatDate(formatLocalDateToISOString(startDate)).slice(0, -5)} - ${formatDate(formatLocalDateToISOString(endDate)).slice(0, -5)}`;
             });
             const sortedWeeklyCounts = sortedWeeklyLabels.map(label => weeklyData[label]);
 
@@ -1536,9 +1609,9 @@
         }
 
         function renderCalendar(date) {
-            calendarContainer.innerHTML = ''; // Clear previous calendar
+            calendarContainer.innerHTML = '';
             const year = date.getFullYear();
-            const month = date.getMonth(); // 0-indexed
+            const month = date.getMonth();
 
             const firstDayOfMonth = new Date(year, month, 1);
             const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -1572,7 +1645,6 @@
             calendarGrid.className = 'calendar';
             calendarContainer.appendChild(calendarGrid);
 
-            // Add day names
             dayNames.forEach(day => {
                 const dayNameDiv = document.createElement('div');
                 dayNameDiv.className = 'day-name';
@@ -1580,14 +1652,12 @@
                 calendarGrid.appendChild(dayNameDiv);
             });
 
-            // Add empty cells for days before the 1st of the month
             for (let i = 0; i < startingDayOfWeek; i++) {
                 const emptyCell = document.createElement('div');
                 emptyCell.className = 'day-cell inactive';
                 calendarGrid.appendChild(emptyCell);
             }
 
-            // Add days of the month
             for (let i = 1; i <= daysInMonth; i++) {
                 const dayCell = document.createElement('div');
                 dayCell.className = 'day-cell';
@@ -1595,13 +1665,13 @@
 
                 const currentDay = new Date(year, month, i);
                 currentDay.setHours(0, 0, 0, 0);
-                const currentDayISO = formatLocalDateToISOString(currentDay); // Use helper for consistency
+                const currentDayISO = formatLocalDateToISOString(currentDay);
 
                 const recordForDay = records.find(r => r.date === currentDayISO);
 
                 if (recordForDay && recordForDay.count > 0) {
                     dayCell.classList.add('smoked');
-                } else if (currentDay <= today) { // Only mark as 'no-smoke' if it's today or in the past
+                } else if (currentDay <= today) {
                     dayCell.classList.add('no-smoke');
                 }
 
@@ -1609,7 +1679,6 @@
                     dayCell.classList.add('today');
                 }
 
-                // Add event listener to day cells to select that date in consumption view
                 dayCell.addEventListener('click', () => {
                     recordDateInput.value = currentDayISO;
                     updateConsumptionViewForSelectedDate();
@@ -1635,13 +1704,11 @@
                 }
             });
 
-            // Render charts or calendar only when their respective views are active
             if (viewId === 'trendsView') {
                 renderDailyChart();
                 renderWeeklyChart();
                 renderMonthlyChart();
             } else {
-                // Destroy charts when leaving the trends view to free up memory
                 if (dailyChartInstance) dailyChartInstance.destroy();
                 if (weeklyChartInstance) weeklyChartInstance.destroy();
                 if (monthlyChartInstance) monthlyChartInstance.destroy();
@@ -1655,8 +1722,18 @@
             }
 
             if (viewId === 'settingsView') {
-                loadSettings(); // Ensure settings fields are populated
-                displayBadges(); // Display badges when settings view is active
+                loadSettings();
+                displayBadges();
+            }
+
+            if (viewId === 'nowView') {
+                updateBigButtonDisplay(); // Make sure the big button reflects current count
+            }
+
+            if (viewId === 'consumptionView') {
+                 // Ensure record date is set to today's date for quick editing, or keep last selected date
+                 recordDateInput.value = formatLocalDateToISOString(new Date());
+                 updateConsumptionViewForSelectedDate();
             }
         }
 
@@ -1672,12 +1749,12 @@
                 records: records,
                 settings: {
                     dailyCigaretteGoal: dailyGoal,
-                    startDate: startDate, // Include startDate in export
+                    startDate: startDate,
                     packPrice: packPrice,
                     cigsPerPack: cigsPerPack,
                     baselineCigarettesPerDay: baselineCigarettesPerDay
                 },
-                earnedBadges: earnedBadges // Include earned badges in export
+                earnedBadges: earnedBadges
             };
             const dataStr = JSON.stringify(data, null, 2);
             const blob = new Blob([dataStr], { type: 'application/json' });
@@ -1693,7 +1770,7 @@
         });
 
         importDataButton.addEventListener('click', () => {
-            importDataInput.click(); // Trigger the hidden file input
+            importDataInput.click();
         });
 
         importDataInput.addEventListener('change', (event) => {
@@ -1706,18 +1783,16 @@
                 try {
                     const importedData = JSON.parse(e.target.result);
                     if (importedData.records && Array.isArray(importedData.records)) {
-                        // Merge or replace records (let's replace for simplicity)
-                        // If merging, you'd need logic to handle duplicates by date/ID
                         records = importedData.records;
                         localStorage.setItem('smokeTrackRecords', JSON.stringify(records));
 
                         if (importedData.settings) {
                             localStorage.setItem('dailyCigaretteGoal', importedData.settings.dailyCigaretteGoal || 0);
-                            localStorage.setItem('startDate', importedData.settings.startDate || formatLocalDateToISOString(new Date())); // Import startDate
+                            localStorage.setItem('startDate', importedData.settings.startDate || formatLocalDateToISOString(new Date()));
                             localStorage.setItem('packPrice', importedData.settings.packPrice || 10.00);
                             localStorage.setItem('cigsPerPack', importedData.settings.cigsPerPack || 20);
                             localStorage.setItem('baselineCigarettesPerDay', importedData.settings.baselineCigarettesPerDay || 20);
-                            loadSettings(); // Reload settings display
+                            loadSettings();
                         }
                         if (importedData.earnedBadges && Array.isArray(importedData.earnedBadges)) {
                             earnedBadges = importedData.earnedBadges;
@@ -1725,7 +1800,7 @@
                         }
 
 
-                        loadRecords(); // Reload everything based on new data
+                        loadRecords();
                         showSnackbar('Données importées avec succès.');
                     } else {
                         throw new Error('Format de données invalide.');
@@ -1734,7 +1809,7 @@
                     console.error('Erreur lors de l\'importation des données:', error);
                     showSnackbar('Erreur lors de l\'importation des données: ' + error.message, 5000);
                 } finally {
-                    importDataInput.value = ''; // Clear the input so same file can be selected again
+                    importDataInput.value = '';
                 }
             };
             reader.readAsText(file);
@@ -1744,29 +1819,28 @@
             if (confirm('Êtes-vous sûr de vouloir EFFACER TOUTES VOS DONNÉES ? Cette action est irréversible.')) {
                 localStorage.removeItem('smokeTrackRecords');
                 localStorage.removeItem('dailyCigaretteGoal');
-                localStorage.removeItem('startDate'); // Clear startDate from localStorage
+                localStorage.removeItem('startDate');
                 localStorage.removeItem('packPrice');
                 localStorage.removeItem('cigsPerPack');
                 localStorage.removeItem('baselineCigarettesPerDay');
-                localStorage.removeItem('earnedBadges'); // Clear earned badges
-                records = []; // Clear current records array
-                earnedBadges = []; // Clear earned badges array
-                loadRecords(); // Reinitialize everything
-                loadSettings(); // Reinitialize settings
+                localStorage.removeItem('earnedBadges');
+                records = [];
+                earnedBadges = [];
+                loadRecords();
+                loadSettings();
                 showSnackbar('Toutes les données ont été effacées.');
             }
         });
 
 
         // Set current date on load
-        recordDateInput.value = formatLocalDateToISOString(new Date()); // Use helper for consistency
+        recordDateInput.value = formatLocalDateToISOString(new Date());
 
         // Initial load
         document.addEventListener('DOMContentLoaded', () => {
-            loadSettings(); // Load settings first
-            loadRecords(); // Then load records and update stats/charts/calendar
-            // Show consumption view by default on load
-            showView('consumptionView');
+            loadSettings();
+            loadRecords();
+            showView('nowView'); // Show NOW view by default
         });
 
     </script>
