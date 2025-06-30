@@ -595,6 +595,10 @@
                 <button type="button" id="incrementGoal" class="count-button">+</button>
             </div>
 
+            <h3 style="margin-top: 2rem;">Date de début de l'objectif</h3>
+            <label for="startDateInput">Depuis quand avez-vous commencé votre objectif ?</label>
+            <input type="date" id="startDateInput" />
+
             <h3 style="margin-top: 2rem;">Calcul des économies</h3>
             <label for="packPrice">Prix moyen d'un paquet (€)</label>
             <input type="number" id="packPrice" min="0" step="0.01" value="10.00" />
@@ -654,6 +658,7 @@
         const dailyGoalInput = document.getElementById('dailyGoalInput');
         const incrementGoalButton = document.getElementById('incrementGoal');
         const decrementGoalButton = document.getElementById('decrementGoal');
+        const startDateInput = document.getElementById('startDateInput'); // New element
         const packPriceInput = document.getElementById('packPrice');
         const cigsPerPackInput = document.getElementById('cigsPerPack');
         const baselineCigarettesPerDayInput = document.getElementById('baselineCigarettesPerDay');
@@ -692,6 +697,7 @@
 
         // Settings variables (loaded from localStorage)
         let dailyGoal = parseInt(localStorage.getItem('dailyCigaretteGoal')) || 0;
+        let startDate = localStorage.getItem('startDate') || formatLocalDateToISOString(new Date()); // Default to today
         let packPrice = parseFloat(localStorage.getItem('packPrice')) || 10.00;
         let cigsPerPack = parseInt(localStorage.getItem('cigsPerPack')) || 20;
         let baselineCigarettesPerDay = parseInt(localStorage.getItem('baselineCigarettesPerDay')) || 20;
@@ -896,11 +902,13 @@
         // Settings functions
         function loadSettings() {
             dailyGoal = parseInt(localStorage.getItem('dailyCigaretteGoal')) || 0;
+            startDate = localStorage.getItem('startDate') || formatLocalDateToISOString(new Date());
             packPrice = parseFloat(localStorage.getItem('packPrice')) || 10.00;
             cigsPerPack = parseInt(localStorage.getItem('cigsPerPack')) || 20;
             baselineCigarettesPerDay = parseInt(localStorage.getItem('baselineCigarettesPerDay')) || 20;
 
             dailyGoalInput.value = dailyGoal;
+            startDateInput.value = startDate; // Set the value for the new input
             packPriceInput.value = packPrice.toFixed(2);
             cigsPerPackInput.value = cigsPerPack;
             baselineCigarettesPerDayInput.value = baselineCigarettesPerDay;
@@ -908,11 +916,13 @@
 
         function saveSettings() {
             dailyGoal = parseInt(dailyGoalInput.value, 10);
+            startDate = startDateInput.value; // Get value from the new input
             packPrice = parseFloat(packPriceInput.value);
             cigsPerPack = parseInt(cigsPerPackInput.value, 10);
             baselineCigarettesPerDay = parseInt(baselineCigarettesPerDayInput.value, 10);
 
             localStorage.setItem('dailyCigaretteGoal', dailyGoal);
+            localStorage.setItem('startDate', startDate); // Save the new setting
             localStorage.setItem('packPrice', packPrice);
             localStorage.setItem('cigsPerPack', cigsPerPack);
             localStorage.setItem('baselineCigarettesPerDay', baselineCigarettesPerDay);
@@ -933,6 +943,9 @@
             }
             saveSettings();
         });
+
+        // Add event listener for the new startDateInput
+        startDateInput.addEventListener('change', saveSettings);
 
         packPriceInput.addEventListener('input', () => { // Use input for live update while typing
             const value = packPriceInput.value;
@@ -960,52 +973,50 @@
             let totalThisMonth = 0;
             let grandTotal = 0;
             let last7DaysCounts = [];
+
+            const costPerCigarette = (cigsPerPack > 0) ? (packPrice / cigsPerPack) : 0;
+
+            // For smoke-free days and longest streak, iterate from user's start date
+            const userStartDate = parseISODateStringToLocalDate(startDate); // Parse the user's start date
+            userStartDate.setHours(0, 0, 0, 0); // Normalize to start of day
+
             let smokeFreeDays = 0;
             let currentStreak = 0;
             let longestStreak = 0;
 
-            const sortedRecords = [...records].sort((a, b) => parseISODateStringToLocalDate(a.date) - parseISODateStringToLocalDate(b.date)); // Sort ascending for streak calc
-
-            const costPerCigarette = (cigsPerPack > 0) ? (packPrice / cigsPerPack) : 0;
-            let totalCigsNotSmokedEver = 0;
-
-            // --- Calculations for streaks and total savings from baseline ---
-            let previousDayHadRecord = false;
-            let currentDateCheck = new Date(now); // Start checking from today backwards
-            let firstRecordDate = sortedRecords.length > 0 ? parseISODateStringToLocalDate(sortedRecords[0].date) : null;
-
-            // Loop back from today to calculate smoke-free days and longest streak
-            // We go back up to 365 days or until before the first record, whichever comes first
-            for (let i = 0; i < 366; i++) {
-                const checkDate = new Date(now);
-                checkDate.setDate(now.getDate() - i);
-                checkDate.setHours(0, 0, 0, 0);
-                const checkDateISO = formatLocalDateToISOString(checkDate); // Use helper for consistency
-                const recordForDay = records.find(r => r.date === checkDateISO);
+            // Loop from userStartDate up to today (inclusive)
+            for (let d = new Date(userStartDate); d <= now; d.setDate(d.getDate() + 1)) {
+                const dayISO = formatLocalDateToISOString(d); // Get YYYY-MM-DD for the current day in loop
+                const recordForDay = records.find(r => r.date === dayISO);
 
                 if (!recordForDay || recordForDay.count === 0) {
-                    if (checkDate <= now) { // Only count past/today as smoke-free
-                        smokeFreeDays++;
-                        currentStreak++;
-                    }
+                    smokeFreeDays++;
+                    currentStreak++;
                 } else {
                     longestStreak = Math.max(longestStreak, currentStreak);
                     currentStreak = 0;
                 }
-
-                // Break loop if we've gone past the very first record date
-                if (firstRecordDate && checkDate < firstRecordDate) {
-                    break;
-                }
             }
-            longestStreak = Math.max(longestStreak, currentStreak); // Final check for streak ending today
+            // After the loop, update longestStreak one last time for any streak ending today
+            longestStreak = Math.max(longestStreak, currentStreak);
+
+
+            // For saved money calculation, also start from userStartDate
+            let totalCigsNotSmokedEver = 0;
+            // Iterate from userStartDate up to today (inclusive)
+            for (let d = new Date(userStartDate); d <= now; d.setDate(d.getDate() + 1)) {
+                const dayISO = formatLocalDateToISOString(d);
+                const recordForDay = records.find(r => r.date === dayISO);
+                const actualCigs = recordForDay ? recordForDay.count : 0;
+                totalCigsNotSmokedEver += Math.max(0, baselineCigarettesPerDay - actualCigs);
+            }
 
 
             records.forEach(record => {
                 const recordDate = parseISODateStringToLocalDate(record.date); // Use helper
                 recordDate.setHours(0, 0, 0, 0);
 
-                // Total général
+                // Total général (all records, regardless of start date)
                 grandTotal += record.count;
 
                 // Total Today
@@ -1038,9 +1049,6 @@
                 if (recordDate >= sevenDaysAgo && recordDate <= now) {
                     last7DaysCounts.push({ date: recordDate.toDateString(), count: record.count });
                 }
-
-                // Total cigarettes NOT smoked compared to baseline
-                totalCigsNotSmokedEver += Math.max(0, baselineCigarettesPerDay - record.count);
             });
 
             // Calculate average for last 7 days
@@ -1051,12 +1059,14 @@
 
             let sumLast7Days = 0;
             let daysConsideredFor7DayAvg = 0; // Number of days within the last 7 with a record (or 0 if no record)
+            // First record date is used here to avoid counting days before any records existed for the average
+            const firstRecordDate = records.length > 0 ? parseISODateStringToLocalDate(records[records.length - 1].date) : null; // Sorted descending, so last is earliest
             for (let i = 0; i < 7; i++) {
                 const date = new Date(now);
                 date.setDate(now.getDate() - i);
                 const dateString = date.toDateString();
-                // If there's a record for the day, or if the day is past the first recorded day, count it
-                if (dailyTotals[dateString] !== undefined || (firstRecordDate && date >= firstRecordDate)) {
+                // Only consider days for average if they are on or after the first recorded date
+                if (!firstRecordDate || date >= firstRecordDate) {
                     sumLast7Days += (dailyTotals[dateString] || 0);
                     daysConsideredFor7DayAvg++;
                 }
@@ -1412,6 +1422,7 @@
                 records: records,
                 settings: {
                     dailyCigaretteGoal: dailyGoal,
+                    startDate: startDate, // Include startDate in export
                     packPrice: packPrice,
                     cigsPerPack: cigsPerPack,
                     baselineCigarettesPerDay: baselineCigarettesPerDay
@@ -1451,6 +1462,7 @@
 
                         if (importedData.settings) {
                             localStorage.setItem('dailyCigaretteGoal', importedData.settings.dailyCigaretteGoal || 0);
+                            localStorage.setItem('startDate', importedData.settings.startDate || formatLocalDateToISOString(new Date())); // Import startDate
                             localStorage.setItem('packPrice', importedData.settings.packPrice || 10.00);
                             localStorage.setItem('cigsPerPack', importedData.settings.cigsPerPack || 20);
                             localStorage.setItem('baselineCigarettesPerDay', importedData.settings.baselineCigarettesPerDay || 20);
@@ -1476,6 +1488,7 @@
             if (confirm('Êtes-vous sûr de vouloir EFFACER TOUTES VOS DONNÉES ? Cette action est irréversible.')) {
                 localStorage.removeItem('smokeTrackRecords');
                 localStorage.removeItem('dailyCigaretteGoal');
+                localStorage.removeItem('startDate'); // Clear startDate from localStorage
                 localStorage.removeItem('packPrice');
                 localStorage.removeItem('cigsPerPack');
                 localStorage.removeItem('baselineCigarettesPerDay');
