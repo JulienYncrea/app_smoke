@@ -228,8 +228,8 @@
 
         .chart-container {
             margin-top: 2rem;
-            max-height: 400px; /* Reverté comme demandé */
-            overflow: hidden; /* Reverté comme demandé */
+            max-height: 400px;
+            overflow: hidden;
         }
         /* Style for the chart titles that are INSIDE the grey container, below the canvas */
         .chart-container h2 {
@@ -342,12 +342,16 @@
             background: #4B5563;
         }
         .day-cell {
+            padding: 0.5rem 0;
+            border-radius: 0.3rem;
+            font-weight: bold;
             background: #111827;
             color: #f9fafb;
             min-height: 40px; /* Ensure consistent height */
             display: flex;
             align-items: center;
             justify-content: center;
+            cursor: pointer; /* Make day cells clickable for potential future features */
         }
         .day-cell.inactive {
             color: #6b7280;
@@ -363,6 +367,31 @@
         }
         .day-cell.today {
             border: 2px solid #FBBF24; /* Jaune pour aujourd'hui */
+        }
+
+        /* Toast / Snackbar for feedback */
+        .snackbar {
+            visibility: hidden;
+            min-width: 250px;
+            margin-left: -125px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 2px;
+            padding: 16px;
+            position: fixed;
+            z-index: 1;
+            left: 50%;
+            bottom: 30px;
+            font-size: 17px;
+            opacity: 0;
+            transition: opacity 0.5s, visibility 0s 0.5s;
+        }
+
+        .snackbar.show {
+            visibility: visible;
+            opacity: 1;
+            transition: opacity 0.5s;
         }
 
 
@@ -460,6 +489,10 @@
             <span class="icon">📈</span>
             Tendances
         </button>
+        <button class="nav-button" data-target="settingsView">
+            <span class="icon">⚙️</span>
+            Paramètres
+        </button>
     </div>
 
     <div id="consumptionView" class="view-section active">
@@ -475,8 +508,7 @@
                     <input type="number" id="cigaretteCount" min="0" value="0" required />
                     <button type="button" id="incrementCount" class="count-button">+</button>
                 </div>
-
-                </form>
+            </form>
         </div>
 
         <div class="container stats-section">
@@ -487,6 +519,18 @@
             <div class="stat-card">
                 <h3>Total aujourd'hui</h3>
                 <p id="totalToday">0</p>
+            </div>
+            <div class="stat-card">
+                <h3>Objectif quotidien</h3>
+                <p id="dailyGoalStatus">0</p>
+            </div>
+            <div class="stat-card">
+                <h3>Jours sans fumer (Total)</h3>
+                <p id="smokeFreeDaysCount">0</p>
+            </div>
+            <div class="stat-card">
+                <h3>Plus longue série sans fumer</h3>
+                <p id="longestStreak">0 jours</p>
             </div>
             <div class="stat-card">
                 <h3>Total cette semaine</h3>
@@ -539,6 +583,54 @@
         </div>
     </div>
 
+    <div id="settingsView" class="view-section">
+        <div class="container">
+            <h2>Paramètres de l'application</h2>
+
+            <h3>Objectif de réduction</h3>
+            <label for="dailyGoalInput">Mon objectif quotidien de cigarettes</label>
+            <div class="count-input-group">
+                <button type="button" id="decrementGoal" class="count-button decrement">-</button>
+                <input type="number" id="dailyGoalInput" min="0" value="0" />
+                <button type="button" id="incrementGoal" class="count-button">+</button>
+            </div>
+
+            <h3 style="margin-top: 2rem;">Calcul des économies</h3>
+            <label for="packPrice">Prix moyen d'un paquet (€)</label>
+            <input type="number" id="packPrice" min="0" step="0.01" value="10.00" />
+
+            <label for="cigsPerPack">Nombre de cigarettes par paquet</label>
+            <input type="number" id="cigsPerPack" min="1" value="20" />
+
+            <label for="baselineCigarettesPerDay">Ma consommation moyenne avant de commencer (cigarettes/jour)</label>
+            <input type="number" id="baselineCigarettesPerDay" min="0" value="20" />
+
+            <h3 style="margin-top: 2rem;">Argent économisé</h3>
+            <div class="stats-section">
+                <div class="stat-card">
+                    <h3>Aujourd'hui</h3>
+                    <p id="savedToday">0.00 €</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Cette semaine</h3>
+                    <p id="savedThisWeek">0.00 €</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Total depuis le début</h3>
+                    <p id="savedTotal">0.00 €</p>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 2rem;">Gestion des données</h3>
+            <button class="btn-action" id="exportData" style="background: #3b82f6;">Exporter les données</button>
+            <input type="file" id="importData" accept=".json" style="display: none; margin-top: 1rem;" />
+            <button class="btn-action" id="importDataButton" style="background: #22c55e;">Importer des données</button>
+            <button class="btn-action" id="clearData" style="background: #ef4444; margin-top: 1rem;">Effacer toutes les données</button>
+        </div>
+    </div>
+
+    <div id="snackbar" class="snackbar"></div>
+
     <script>
         const cigaretteForm = document.getElementById('cigaretteForm');
         const recordDateInput = document.getElementById('recordDate');
@@ -553,11 +645,32 @@
         const totalTodayElement = document.getElementById('totalToday');
         const totalThisWeekElement = document.getElementById('totalThisWeek');
         const totalThisMonthElement = document.getElementById('totalThisMonth');
-        const totalCigarettesSmokedElement = document.getElementById('totalCigarettesSmoked'); // Nouveau : total général
+        const totalCigarettesSmokedElement = document.getElementById('totalCigarettesSmoked');
+        const dailyGoalStatusElement = document.getElementById('dailyGoalStatus');
+        const smokeFreeDaysCountElement = document.getElementById('smokeFreeDaysCount');
+        const longestStreakElement = document.getElementById('longestStreak');
+
+        // Settings elements
+        const dailyGoalInput = document.getElementById('dailyGoalInput');
+        const incrementGoalButton = document.getElementById('incrementGoal');
+        const decrementGoalButton = document.getElementById('decrementGoal');
+        const packPriceInput = document.getElementById('packPrice');
+        const cigsPerPackInput = document.getElementById('cigsPerPack');
+        const baselineCigarettesPerDayInput = document.getElementById('baselineCigarettesPerDay');
+        const savedTodayElement = document.getElementById('savedToday');
+        const savedThisWeekElement = document.getElementById('savedThisWeek');
+        const savedTotalElement = document.getElementById('savedTotal');
+
+        // Data management buttons
+        const exportDataButton = document.getElementById('exportData');
+        const importDataInput = document.getElementById('importData');
+        const importDataButton = document.getElementById('importDataButton');
+        const clearDataButton = document.getElementById('clearData');
 
         // Navigation elements
         const navButtons = document.querySelectorAll('.nav-button');
         const viewSections = document.querySelectorAll('.view-section');
+        const snackbar = document.getElementById('snackbar');
 
         // Calendar elements
         const calendarContainer = document.getElementById('calendarContainer');
@@ -577,8 +690,22 @@
             monthlyLabels: [], monthlyCounts: []
         };
 
+        // Settings variables (loaded from localStorage)
+        let dailyGoal = parseInt(localStorage.getItem('dailyCigaretteGoal')) || 0;
+        let packPrice = parseFloat(localStorage.getItem('packPrice')) || 10.00;
+        let cigsPerPack = parseInt(localStorage.getItem('cigsPerPack')) || 20;
+        let baselineCigarettesPerDay = parseInt(localStorage.getItem('baselineCigarettesPerDay')) || 20;
+
         function generateUniqueId() {
             return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+        }
+
+        function showSnackbar(message, duration = 3000) {
+            snackbar.textContent = message;
+            snackbar.classList.add('show');
+            setTimeout(() => {
+                snackbar.classList.remove('show');
+            }, duration);
         }
 
         function loadRecords() {
@@ -609,6 +736,7 @@
             updateStatistics();
             prepareChartData(); // Prepare chart data after records are loaded/updated
             renderCalendar(currentCalendarDate); // Render calendar after records are loaded
+            updateConsumptionViewForSelectedDate(); // Update consumption view with current date's record
         }
 
         function displayRecords() {
@@ -643,10 +771,7 @@
                         records = records.filter(r => r.id !== recordIdToDelete);
                         localStorage.setItem('smokeTrackRecords', JSON.stringify(records));
                         loadRecords(); // Reload to update list, stats, and charts
-                        // If the deleted record was for the currently selected date, reset consumption view
-                        if (recordDateInput.value === recordToDelete.date) {
-                            cigaretteCountInput.value = 0;
-                        }
+                        showSnackbar('Enregistrement supprimé.');
                     }
                 });
 
@@ -660,6 +785,7 @@
                         cigaretteCountInput.value = recordToEdit.count;
                         showView('consumptionView'); // Switch to consumption view for editing
                         window.scrollTo({ top: 0, behavior: 'smooth' }); // Scroll to top of the view
+                        showSnackbar('Enregistrement chargé pour modification.');
                     }
                 });
 
@@ -671,41 +797,51 @@
             if (!dateStr) return 'N/A';
             const d = new Date(dateStr);
             // Adjust for timezone offset to prevent date shifting for local storage dates
-            const userTimezoneOffset = d.getTimezoneOffset() * 60000;
-            const adjustedDate = new Date(d.getTime() + userTimezoneOffset);
-            return adjustedDate.toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' });
+            // const userTimezoneOffset = d.getTimezoneOffset() * 60000;
+            // const adjustedDate = new Date(d.getTime() + userTimezoneOffset);
+            // Using toLocaleDateString directly might be better here as it respects local timezone for display.
+            return d.toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' });
         }
 
-        // Nouvelle fonction pour enregistrer ou mettre à jour la consommation
         function saveOrUpdateConsumption() {
             const date = recordDateInput.value;
             const count = parseInt(cigaretteCountInput.value, 10);
 
             if (!date) {
                 console.error('Date manquante. Impossible d\'enregistrer.');
+                showSnackbar('Date manquante.', 2000);
                 return;
             }
             if (isNaN(count) || count < 0) {
                 console.error('Nombre de cigarettes invalide. Impossible d\'enregistrer.');
+                showSnackbar('Nombre de cigarettes invalide.', 2000);
                 return;
             }
 
             const existingRecordIndex = records.findIndex(r => r.date === date);
+            let message = '';
 
             if (count === 0) {
                 if (existingRecordIndex !== -1) {
                     records.splice(existingRecordIndex, 1);
+                    message = 'Enregistrement supprimé.';
+                } else {
+                    // No record for this date and count is 0, nothing to do
+                    return;
                 }
             } else {
                 if (existingRecordIndex !== -1) {
                     records[existingRecordIndex] = { ...records[existingRecordIndex], count: count };
+                    message = 'Consommation mise à jour.';
                 } else {
                     records.push({ id: generateUniqueId(), date: date, count: count });
+                    message = 'Consommation ajoutée.';
                 }
             }
 
             localStorage.setItem('smokeTrackRecords', JSON.stringify(records));
-            loadRecords(); // Recharge les enregistrements pour mettre à jour la liste, les stats et les graphiques
+            loadRecords(); // Reload to update list, stats, and charts
+            showSnackbar(message);
         }
 
         // Écouteurs d'événements pour l'enregistrement automatique
@@ -723,9 +859,9 @@
         });
 
         cigaretteCountInput.addEventListener('input', () => {
-             // S'assurer que la valeur est un nombre valide avant de sauvegarder
-            const value = cigaretteCountInput.value;
-            if (value === '' || value === null) {
+             const value = cigaretteCountInput.value;
+            // Allow empty string temporarily for user input, but don't save.
+            if (value === '' || value === null || isNaN(parseInt(value, 10))) {
                 return;
             }
             const count = parseInt(value, 10);
@@ -734,12 +870,69 @@
             }
         });
 
-        recordDateInput.addEventListener('change', () => {
+        function updateConsumptionViewForSelectedDate() {
             const selectedDate = recordDateInput.value;
             const existingRecord = records.find(r => r.date === selectedDate);
             cigaretteCountInput.value = existingRecord ? existingRecord.count : 0;
-            // Pas d'appel à saveOrUpdateConsumption ici. La valeur est juste chargée.
-            // L'utilisateur devra interagir avec le champ count ou les boutons pour déclencher la sauvegarde.
+        }
+
+        recordDateInput.addEventListener('change', updateConsumptionViewForSelectedDate);
+
+        // Settings functions
+        function loadSettings() {
+            dailyGoal = parseInt(localStorage.getItem('dailyCigaretteGoal')) || 0;
+            packPrice = parseFloat(localStorage.getItem('packPrice')) || 10.00;
+            cigsPerPack = parseInt(localStorage.getItem('cigsPerPack')) || 20;
+            baselineCigarettesPerDay = parseInt(localStorage.getItem('baselineCigarettesPerDay')) || 20;
+
+            dailyGoalInput.value = dailyGoal;
+            packPriceInput.value = packPrice.toFixed(2);
+            cigsPerPackInput.value = cigsPerPack;
+            baselineCigarettesPerDayInput.value = baselineCigarettesPerDay;
+        }
+
+        function saveSettings() {
+            dailyGoal = parseInt(dailyGoalInput.value, 10);
+            packPrice = parseFloat(packPriceInput.value);
+            cigsPerPack = parseInt(cigsPerPackInput.value, 10);
+            baselineCigarettesPerDay = parseInt(baselineCigarettesPerDayInput.value, 10);
+
+            localStorage.setItem('dailyCigaretteGoal', dailyGoal);
+            localStorage.setItem('packPrice', packPrice);
+            localStorage.setItem('cigsPerPack', cigsPerPack);
+            localStorage.setItem('baselineCigarettesPerDay', baselineCigarettesPerDay);
+
+            updateStatistics();
+            showSnackbar('Paramètres sauvegardés.');
+        }
+
+        incrementGoalButton.addEventListener('click', () => {
+            dailyGoalInput.value = parseInt(dailyGoalInput.value, 10) + 1;
+            saveSettings();
+        });
+
+        decrementGoalButton.addEventListener('click', () => {
+            const currentGoal = parseInt(dailyGoalInput.value, 10);
+            if (currentGoal > 0) {
+                dailyGoalInput.value = currentGoal - 1;
+            }
+            saveSettings();
+        });
+
+        packPriceInput.addEventListener('input', () => { // Use input for live update while typing
+            const value = packPriceInput.value;
+            if (value === '' || isNaN(parseFloat(value))) return;
+            saveSettings();
+        });
+        cigsPerPackInput.addEventListener('input', () => {
+            const value = cigsPerPackInput.value;
+            if (value === '' || isNaN(parseInt(value, 10))) return;
+            saveSettings();
+        });
+        baselineCigarettesPerDayInput.addEventListener('input', () => {
+            const value = baselineCigarettesPerDayInput.value;
+            if (value === '' || isNaN(parseInt(value, 10))) return;
+            saveSettings();
         });
 
 
@@ -750,8 +943,49 @@
             let totalToday = 0;
             let totalThisWeek = 0;
             let totalThisMonth = 0;
-            let grandTotal = 0; // Nouveau : total général
+            let grandTotal = 0;
             let last7DaysCounts = [];
+            let smokeFreeDays = 0;
+            let currentStreak = 0;
+            let longestStreak = 0;
+
+            const sortedRecords = [...records].sort((a, b) => new Date(a.date) - new Date(b.date)); // Sort ascending for streak calc
+
+            const costPerCigarette = (cigsPerPack > 0) ? (packPrice / cigsPerPack) : 0;
+            let totalCigsNotSmokedEver = 0;
+
+            // --- Calculations for streaks and total savings from baseline ---
+            let previousDayHadRecord = false;
+            let currentDateCheck = new Date(now); // Start checking from today backwards
+            let firstRecordDate = sortedRecords.length > 0 ? new Date(sortedRecords[0].date) : null;
+            if (firstRecordDate) firstRecordDate.setHours(0,0,0,0);
+
+            // Loop back from today to calculate smoke-free days and longest streak
+            // We go back up to 365 days or until before the first record, whichever comes first
+            for (let i = 0; i < 366; i++) {
+                const checkDate = new Date(now);
+                checkDate.setDate(now.getDate() - i);
+                checkDate.setHours(0, 0, 0, 0);
+                const checkDateISO = checkDate.toISOString().split('T')[0];
+                const recordForDay = records.find(r => r.date === checkDateISO);
+
+                if (!recordForDay || recordForDay.count === 0) {
+                    if (checkDate <= now) { // Only count past/today as smoke-free
+                        smokeFreeDays++;
+                        currentStreak++;
+                    }
+                } else {
+                    longestStreak = Math.max(longestStreak, currentStreak);
+                    currentStreak = 0;
+                }
+
+                // Break loop if we've gone past the very first record date
+                if (firstRecordDate && checkDate < firstRecordDate) {
+                    break;
+                }
+            }
+            longestStreak = Math.max(longestStreak, currentStreak); // Final check for streak ending today
+
 
             records.forEach(record => {
                 const recordDate = new Date(record.date);
@@ -790,6 +1024,9 @@
                 if (recordDate >= sevenDaysAgo && recordDate <= now) {
                     last7DaysCounts.push({ date: recordDate.toDateString(), count: record.count });
                 }
+
+                // Total cigarettes NOT smoked compared to baseline
+                totalCigsNotSmokedEver += Math.max(0, baselineCigarettesPerDay - record.count);
             });
 
             // Calculate average for last 7 days
@@ -799,27 +1036,65 @@
             });
 
             let sumLast7Days = 0;
-            let daysWithRecords = 0;
+            let daysConsideredFor7DayAvg = 0; // Number of days within the last 7 with a record (or 0 if no record)
             for (let i = 0; i < 7; i++) {
                 const date = new Date(now);
                 date.setDate(now.getDate() - i);
                 const dateString = date.toDateString();
-                if (dailyTotals[dateString] !== undefined) {
-                    sumLast7Days += dailyTotals[dateString];
-                    daysWithRecords++;
+                // If there's a record for the day, or if the day is past the first recorded day, count it
+                if (dailyTotals[dateString] !== undefined || (firstRecordDate && date >= firstRecordDate)) {
+                    sumLast7Days += (dailyTotals[dateString] || 0);
+                    daysConsideredFor7DayAvg++;
                 }
             }
-            const avgDailyLast7Days = daysWithRecords > 0 ? (sumLast7Days / daysWithRecords).toFixed(1) : 0;
+            const avgDailyLast7Days = daysConsideredFor7DayAvg > 0 ? (sumLast7Days / daysConsideredFor7DayAvg).toFixed(1) : 0;
+
+
+            // Calculate savings amounts
+            const savedTodayCigs = Math.max(0, baselineCigarettesPerDay - totalToday);
+            const savedTodayAmount = (savedTodayCigs * costPerCigarette).toFixed(2);
+
+            let savedThisWeekCigs = 0;
+            const startOfWeek = new Date(now);
+            startOfWeek.setDate(now.getDate() - now.getDay()); // Sunday
+            startOfWeek.setHours(0,0,0,0);
+
+            for (let d = new Date(startOfWeek); d <= now; d.setDate(d.getDate() + 1)) {
+                const dayISO = d.toISOString().split('T')[0];
+                const recordForDay = records.find(r => r.date === dayISO);
+                savedThisWeekCigs += Math.max(0, baselineCigarettesPerDay - (recordForDay ? recordForDay.count : 0));
+            }
+            const savedThisWeekAmount = (savedThisWeekCigs * costPerCigarette).toFixed(2);
+
+
+            const savedTotalAmount = (totalCigsNotSmokedEver * costPerCigarette).toFixed(2);
 
 
             avgDailyLast7DaysElement.textContent = avgDailyLast7Days;
             totalTodayElement.textContent = totalToday;
             totalThisWeekElement.textContent = totalThisWeek;
             totalThisMonthElement.textContent = totalThisMonth;
-            totalCigarettesSmokedElement.textContent = grandTotal; // Mettre à jour le total général
+            totalCigarettesSmokedElement.textContent = grandTotal;
+
+            // Update Goal Status
+            if (dailyGoal > 0) {
+                dailyGoalStatusElement.textContent = `${totalToday} / ${dailyGoal} ${totalToday <= dailyGoal ? '✔️' : '❌'}`;
+                dailyGoalStatusElement.style.color = totalToday <= dailyGoal ? '#4CAF50' : '#ef4444';
+            } else {
+                dailyGoalStatusElement.textContent = `Non défini`;
+                dailyGoalStatusElement.style.color = '#d1d5db';
+            }
+
+            // Update smoke-free stats
+            smokeFreeDaysCountElement.textContent = smokeFreeDays;
+            longestStreakElement.textContent = `${longestStreak} jours`;
+
+            // Update savings display
+            savedTodayElement.textContent = `${savedTodayAmount} €`;
+            savedThisWeekElement.textContent = `${savedThisWeekAmount} €`;
+            savedTotalElement.textContent = `${savedTotalAmount} €`;
         }
 
-        // NEW: Prepare chart data, but don't render charts yet
         function prepareChartData() {
             const dailyData = {};
             const weeklyData = {};
@@ -873,7 +1148,6 @@
             });
             const sortedMonthlyCounts = sortedMonthlyLabels.map(label => monthlyData[label]);
 
-            // Store prepared data globally
             chartData.dailyLabels = dailyChartLabels;
             chartData.dailyCounts = dailyChartData;
             chartData.weeklyLabels = readableWeeklyLabels;
@@ -882,9 +1156,8 @@
             chartData.monthlyCounts = sortedMonthlyCounts;
         }
 
-        // NEW: Individual chart rendering functions, called only when view is active
         function renderDailyChart() {
-            if (dailyChartInstance) dailyChartInstance.destroy(); // Destroy previous instance
+            if (dailyChartInstance) dailyChartInstance.destroy();
             const dailyCtx = document.getElementById('dailyChart').getContext('2d');
             dailyChartInstance = new Chart(dailyCtx, {
                 type: 'bar',
@@ -911,14 +1184,14 @@
                     },
                     plugins: {
                         legend: { display: false },
-                        title: { display: false } /* Removed Chart.js title as HTML title is used */
+                        title: { display: false }
                     }
                 }
             });
         }
 
         function renderWeeklyChart() {
-            if (weeklyChartInstance) weeklyChartInstance.destroy(); // Destroy previous instance
+            if (weeklyChartInstance) weeklyChartInstance.destroy();
             const weeklyCtx = document.getElementById('weeklyChart').getContext('2d');
             weeklyChartInstance = new Chart(weeklyCtx, {
                 type: 'line',
@@ -947,14 +1220,14 @@
                     },
                     plugins: {
                         legend: { display: false },
-                        title: { display: false } /* Removed Chart.js title as HTML title is used */
+                        title: { display: false }
                     }
                 }
             });
         }
 
         function renderMonthlyChart() {
-            if (monthlyChartInstance) monthlyChartInstance.destroy(); // Destroy previous instance
+            if (monthlyChartInstance) monthlyChartInstance.destroy();
             const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
             monthlyChartInstance = new Chart(monthlyCtx, {
                 type: 'line',
@@ -983,13 +1256,12 @@
                     },
                     plugins: {
                         legend: { display: false },
-                        title: { display: false } /* Removed Chart.js title as HTML title is used */
+                        title: { display: false }
                     }
                 }
             });
         }
 
-        // Calendar rendering
         function renderCalendar(date) {
             calendarContainer.innerHTML = ''; // Clear previous calendar
             const year = date.getFullYear();
@@ -1064,6 +1336,13 @@
                     dayCell.classList.add('today');
                 }
 
+                // Add event listener to day cells to select that date in consumption view
+                dayCell.addEventListener('click', () => {
+                    recordDateInput.value = currentDayISO;
+                    updateConsumptionViewForSelectedDate();
+                    showView('consumptionView');
+                });
+
                 calendarGrid.appendChild(dayCell);
             }
         }
@@ -1101,6 +1380,10 @@
             if (viewId === 'calendarView') {
                 renderCalendar(currentCalendarDate);
             }
+
+            if (viewId === 'settingsView') {
+                loadSettings(); // Ensure settings fields are populated
+            }
         }
 
         navButtons.forEach(button => {
@@ -1109,12 +1392,94 @@
             });
         });
 
+        // Data Management functions
+        exportDataButton.addEventListener('click', () => {
+            const data = {
+                records: records,
+                settings: {
+                    dailyCigaretteGoal: dailyGoal,
+                    packPrice: packPrice,
+                    cigsPerPack: cigsPerPack,
+                    baselineCigarettesPerDay: baselineCigarettesPerDay
+                }
+            };
+            const dataStr = JSON.stringify(data, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'smokeTrack_data.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showSnackbar('Données exportées avec succès.');
+        });
+
+        importDataButton.addEventListener('click', () => {
+            importDataInput.click(); // Trigger the hidden file input
+        });
+
+        importDataInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (!file) {
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    if (importedData.records && Array.isArray(importedData.records)) {
+                        // Merge or replace records (let's replace for simplicity)
+                        // If merging, you'd need logic to handle duplicates by date/ID
+                        records = importedData.records;
+                        localStorage.setItem('smokeTrackRecords', JSON.stringify(records));
+
+                        if (importedData.settings) {
+                            localStorage.setItem('dailyCigaretteGoal', importedData.settings.dailyCigaretteGoal || 0);
+                            localStorage.setItem('packPrice', importedData.settings.packPrice || 10.00);
+                            localStorage.setItem('cigsPerPack', importedData.settings.cigsPerPack || 20);
+                            localStorage.setItem('baselineCigarettesPerDay', importedData.settings.baselineCigarettesPerDay || 20);
+                            loadSettings(); // Reload settings display
+                        }
+
+                        loadRecords(); // Reload everything based on new data
+                        showSnackbar('Données importées avec succès.');
+                    } else {
+                        throw new Error('Format de données invalide.');
+                    }
+                } catch (error) {
+                    console.error('Erreur lors de l\'importation des données:', error);
+                    showSnackbar('Erreur lors de l\'importation des données: ' + error.message, 5000);
+                } finally {
+                    importDataInput.value = ''; // Clear the input so same file can be selected again
+                }
+            };
+            reader.readAsText(file);
+        });
+
+        clearDataButton.addEventListener('click', () => {
+            if (confirm('Êtes-vous sûr de vouloir EFFACER TOUTES VOS DONNÉES ? Cette action est irréversible.')) {
+                localStorage.removeItem('smokeTrackRecords');
+                localStorage.removeItem('dailyCigaretteGoal');
+                localStorage.removeItem('packPrice');
+                localStorage.removeItem('cigsPerPack');
+                localStorage.removeItem('baselineCigarettesPerDay');
+                records = []; // Clear current records array
+                loadRecords(); // Reinitialize everything
+                loadSettings(); // Reinitialize settings
+                showSnackbar('Toutes les données ont été effacées.');
+            }
+        });
+
+
         // Set current date on load
         recordDateInput.value = new Date().toISOString().split('T')[0];
 
         // Initial load
         document.addEventListener('DOMContentLoaded', () => {
-            loadRecords();
+            loadSettings(); // Load settings first
+            loadRecords(); // Then load records and update stats/charts/calendar
             // Show consumption view by default on load
             showView('consumptionView');
         });
