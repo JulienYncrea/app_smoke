@@ -301,6 +301,70 @@
             background: #b91c1c;
         }
 
+        /* Calendar styles */
+        .calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            text-align: center;
+            margin-top: 1rem;
+        }
+        .calendar-header {
+            grid-column: span 7;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            color: #FBBF24;
+            font-size: 1.2em;
+        }
+        .calendar-header button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 0.5rem 0.8rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s ease;
+            width: auto; /* Override default button width */
+        }
+        .calendar-header button:hover {
+            background: #1d4ed8;
+        }
+        .day-name, .day-cell {
+            padding: 0.5rem 0;
+            border-radius: 0.3rem;
+            font-weight: bold;
+        }
+        .day-name {
+            color: #d1d5db;
+            background: #4B5563;
+        }
+        .day-cell {
+            background: #111827;
+            color: #f9fafb;
+            min-height: 40px; /* Ensure consistent height */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .day-cell.inactive {
+            color: #6b7280;
+            background: #374151;
+        }
+        .day-cell.smoked {
+            background: #ef4444; /* Rouge */
+            color: white;
+        }
+        .day-cell.no-smoke {
+            background: #4CAF50; /* Vert */
+            color: white;
+        }
+        .day-cell.today {
+            border: 2px solid #FBBF24; /* Jaune pour aujourd'hui */
+        }
+
 
         @media (max-width: 640px) {
             .container {
@@ -339,19 +403,28 @@
                 flex-wrap: nowrap; /* Empêche le retour à la ligne des boutons */
             }
             .count-input-group input[type="number"] {
-                width: auto; 
+                width: auto;
             }
             .nav-buttons-container {
-                align-items: center; 
-                gap: 0.5rem; 
+                align-items: center;
+                gap: 0.5rem;
             }
             .nav-button {
-                width: 65px; 
-                height: 65px; 
+                width: 65px;
+                height: 65px;
                 font-size: 0.65em; /* Texte des boutons encore plus petit */
             }
             .nav-button .icon {
                 font-size: 1.5em; /* Icône légèrement plus petite */
+            }
+
+            /* Calendar responsive */
+            .calendar {
+                gap: 3px;
+            }
+            .day-name, .day-cell {
+                font-size: 0.8em;
+                padding: 0.3rem 0;
             }
         }
     </style>
@@ -378,6 +451,10 @@
         <button class="nav-button" data-target="historyView">
             <span class="icon">📜</span>
             Historique
+        </button>
+        <button class="nav-button" data-target="calendarView">
+            <span class="icon">📅</span>
+            Calendrier
         </button>
         <button class="nav-button" data-target="trendsView">
             <span class="icon">📈</span>
@@ -434,6 +511,14 @@
         </div>
     </div>
 
+    <div id="calendarView" class="view-section">
+        <div class="container">
+            <h2>Calendrier de consommation</h2>
+            <div id="calendarContainer">
+                </div>
+        </div>
+    </div>
+
     <div id="trendsView" class="view-section">
         <h2 class="chart-main-title">Tendances de consommation journalière</h2>
         <div class="container chart-container">
@@ -473,6 +558,10 @@
         // Navigation elements
         const navButtons = document.querySelectorAll('.nav-button');
         const viewSections = document.querySelectorAll('.view-section');
+
+        // Calendar elements
+        const calendarContainer = document.getElementById('calendarContainer');
+        let currentCalendarDate = new Date(); // To keep track of the month displayed in the calendar
 
         let records = [];
 
@@ -519,6 +608,7 @@
             displayRecords();
             updateStatistics();
             prepareChartData(); // Prepare chart data after records are loaded/updated
+            renderCalendar(currentCalendarDate); // Render calendar after records are loaded
         }
 
         function displayRecords() {
@@ -636,7 +726,7 @@
              // S'assurer que la valeur est un nombre valide avant de sauvegarder
             const value = cigaretteCountInput.value;
             if (value === '' || value === null) {
-                return; 
+                return;
             }
             const count = parseInt(value, 10);
             if (!isNaN(count) && count >= 0) {
@@ -762,7 +852,7 @@
                 d.setDate(today.getDate() - i);
                 const dateKey = d.toISOString().split('T')[0];
                 const displayDate = formatDate(dateKey).replace(` ${d.getFullYear()}`, '');
-                
+
                 dailyChartLabels.push(displayDate);
                 dailyChartData.push(dailyData[dateKey] || 0);
             }
@@ -812,10 +902,10 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     scales: {
-                        y: { 
-                            min: -1, 
-                            ticks: { color: '#d1d5db' }, 
-                            grid: { color: '#4B5563' } 
+                        y: {
+                            min: -1,
+                            ticks: { color: '#d1d5db' },
+                            grid: { color: '#4B5563' }
                         },
                         x: { ticks: { color: '#d1d5db', maxTicksLimit: 10, autoSkip: true }, grid: { color: '#4B5563' } }
                     },
@@ -848,7 +938,7 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     scales: {
-                        y: { 
+                        y: {
                             min: -1,
                             ticks: { color: '#d1d5db' },
                             grid: { color: '#4B5563' }
@@ -884,10 +974,10 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     scales: {
-                        y: { 
-                            min: -1, 
-                            ticks: { color: '#d1d5db' }, 
-                            grid: { color: '#4B5563' } 
+                        y: {
+                            min: -1,
+                            ticks: { color: '#d1d5db' },
+                            grid: { color: '#4B5563' }
                         },
                         x: { ticks: { color: '#d1d5db', maxTicksLimit: 10, autoSkip: true }, grid: { color: '#4B5563' } }
                     },
@@ -897,6 +987,85 @@
                     }
                 }
             });
+        }
+
+        // Calendar rendering
+        function renderCalendar(date) {
+            calendarContainer.innerHTML = ''; // Clear previous calendar
+            const year = date.getFullYear();
+            const month = date.getMonth(); // 0-indexed
+
+            const firstDayOfMonth = new Date(year, month, 1);
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const startingDayOfWeek = (firstDayOfMonth.getDay() + 6) % 7; // Adjust to start on Monday (0=Mon, 6=Sun)
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            const monthNames = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
+            const dayNames = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
+
+            const headerDiv = document.createElement('div');
+            headerDiv.className = 'calendar-header';
+            headerDiv.innerHTML = `
+                <button id="prevMonth">←</button>
+                <span>${monthNames[month]} ${year}</span>
+                <button id="nextMonth">→</button>
+            `;
+            calendarContainer.appendChild(headerDiv);
+
+            document.getElementById('prevMonth').addEventListener('click', () => {
+                currentCalendarDate.setMonth(currentCalendarDate.getMonth() - 1);
+                renderCalendar(currentCalendarDate);
+            });
+            document.getElementById('nextMonth').addEventListener('click', () => {
+                currentCalendarDate.setMonth(currentCalendarDate.getMonth() + 1);
+                renderCalendar(currentCalendarDate);
+            });
+
+            const calendarGrid = document.createElement('div');
+            calendarGrid.className = 'calendar';
+            calendarContainer.appendChild(calendarGrid);
+
+            // Add day names
+            dayNames.forEach(day => {
+                const dayNameDiv = document.createElement('div');
+                dayNameDiv.className = 'day-name';
+                dayNameDiv.textContent = day;
+                calendarGrid.appendChild(dayNameDiv);
+            });
+
+            // Add empty cells for days before the 1st of the month
+            for (let i = 0; i < startingDayOfWeek; i++) {
+                const emptyCell = document.createElement('div');
+                emptyCell.className = 'day-cell inactive';
+                calendarGrid.appendChild(emptyCell);
+            }
+
+            // Add days of the month
+            for (let i = 1; i <= daysInMonth; i++) {
+                const dayCell = document.createElement('div');
+                dayCell.className = 'day-cell';
+                dayCell.textContent = i;
+
+                const currentDay = new Date(year, month, i);
+                currentDay.setHours(0, 0, 0, 0);
+                const currentDayISO = currentDay.toISOString().split('T')[0];
+
+                const recordForDay = records.find(r => r.date === currentDayISO);
+
+                if (recordForDay && recordForDay.count > 0) {
+                    dayCell.classList.add('smoked');
+                } else if (currentDay <= today) { // Only mark as 'no-smoke' if it's today or in the past
+                    dayCell.classList.add('no-smoke');
+                }
+
+                if (currentDay.toDateString() === today.toDateString()) {
+                    dayCell.classList.add('today');
+                }
+
+                calendarGrid.appendChild(dayCell);
+            }
         }
 
 
@@ -914,7 +1083,7 @@
                 }
             });
 
-            // Render charts only when the trends view is active
+            // Render charts or calendar only when their respective views are active
             if (viewId === 'trendsView') {
                 renderDailyChart();
                 renderWeeklyChart();
@@ -927,6 +1096,10 @@
                 dailyChartInstance = null;
                 weeklyChartInstance = null;
                 monthlyChartInstance = null;
+            }
+
+            if (viewId === 'calendarView') {
+                renderCalendar(currentCalendarDate);
             }
         }
 
@@ -943,7 +1116,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             loadRecords();
             // Show consumption view by default on load
-            showView('consumptionView'); 
+            showView('consumptionView');
         });
 
     </script>
